@@ -125,18 +125,11 @@
             var _ua = navigator.userAgent || '';
 
             // Paso 1: Regex clásico para móviles conocidos
-            var _isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(_ua);
+            var _isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|CriOS|FxiOS/i.test(_ua);
 
-            // Paso 2: iPadOS 13+ se reporta como "Macintosh" — detectar vía touch
-            if (!_isMobile && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) {
+            // Paso 2: iPadOS 13+ se reporta como "Macintosh" o dispositivos con soporte touch
+            if (!_isMobile && ((navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || ('ontouchstart' in window))) {
                 _isMobile = true;
-            }
-
-            // Paso 3: Cualquier dispositivo táctil con pantalla ≤1366px (tablets, 2-en-1 en modo tablet)
-            if (!_isMobile && ('ontouchstart' in window)) {
-                try {
-                    if (window.screen && window.screen.width <= 1366) { _isMobile = true; }
-                } catch(e) {}
             }
 
             // Paso 4: Detectar si estamos dentro de un iframe (ej. Google Apps Script deployment)
@@ -2631,6 +2624,10 @@
             animation: pageFadeIn 0.3s ease forwards;
         }
 
+        body, html, #viewer-section, #viewer-container {
+            overscroll-behavior-y: contain;
+        }
+
         /* === RESPONSIVE === */
         @media (max-width: 1024px) {
             .viewer-content-area {
@@ -4836,6 +4833,16 @@
 
                     <div class="control-group-separator"></div>
 
+                    <!-- Grupo: Buscar -->
+                    <div class="control-group">
+                        <button onclick="toggleSearchPanel()" class="pixel-button secondary icon-only"
+                            id="search-pdf-btn" title="Buscar palabras">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+
+                    <div class="control-group-separator"></div>
+
                     <!-- Grupo: Zoom -->
                     <div class="control-group">
                         <button onclick="changeZoom(-0.2)" class="pixel-button secondary icon-only" title="Alejar">
@@ -4915,6 +4922,14 @@
                         </button>
                     </div>
 
+                    <!-- Buscar -->
+                    <div class="control-group">
+                        <button onclick="toggleSearchPanel()" class="pixel-button secondary icon-only"
+                            id="search-pdf-btn-mobile" title="Buscar">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+
                     <!-- Zoom -->
                     <div class="control-group">
                         <button onclick="changeZoom(-0.2)" class="pixel-button secondary icon-only" title="Alejar">
@@ -4962,6 +4977,25 @@
             <h4><i class="fas fa-bookmark"></i> Mis Marcadores</h4>
             <div class="bookmark-list" id="bookmark-list">
                 <div class="bookmark-empty">No hay marcadores guardados</div>
+            </div>
+        </div>
+
+        <!-- Panel de Búsqueda -->
+        <div class="bookmark-panel" id="search-panel" style="display: none; top: 90px; right: 20px; width: 300px; max-height: 420px; z-index: 200;">
+            <h4 style="margin-bottom: 12px;"><i class="fas fa-search"></i> Buscar en la Novela</h4>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input type="text" id="pdf-search-input" class="ui-input" placeholder="Escribe palabra..." style="flex: 1; padding: 8px; font-size: 13px; border-radius: 8px; background: var(--lumin-gray); border: 1px solid var(--border); color: var(--foreground);" onkeydown="if(event.key==='Enter') performPdfSearch()">
+                <button onclick="performPdfSearch()" class="pixel-button small" style="padding: 8px 12px;"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="pdf-search-results-summary" style="font-size: 12px; color: var(--lumin-yellow); margin-bottom: 10px; display: none; justify-content: space-between; align-items: center;">
+                <span id="pdf-search-count">0 coincidencias</span>
+                <div style="display: flex; gap: 6px;">
+                    <button onclick="navigatePdfSearch(-1)" class="pixel-button small icon-only" style="width:24px; height:24px; font-size:10px; padding:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-chevron-left"></i></button>
+                    <button onclick="navigatePdfSearch(1)" class="pixel-button small icon-only" style="width:24px; height:24px; font-size:10px; padding:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="bookmark-list" id="pdf-search-results-list" style="max-height: 240px; overflow-y: auto;">
+                <div class="bookmark-empty" id="pdf-search-empty-text">Escribe una palabra para empezar a buscar</div>
             </div>
         </div>
 
@@ -5108,6 +5142,9 @@
         let lastPageNum = 1;
         let lastWheelTime = 0;
         let touchEndY = 0;
+        let pdfSearchMatches = [];
+        let currentSearchMatchIndex = -1;
+        let pdfSearchQuery = "";
 
 
 
@@ -7336,6 +7373,39 @@
                     background: 'white'
                 }).promise;
 
+                // DIBUJAR RESALTADOS DE BÚSQUEDA SI HAY UNA QUERY ACTIVA
+                if (pdfSearchQuery) {
+                    try {
+                        const textContent = await page.getTextContent();
+                        const pageViewport = page.getViewport({ scale: currentScale });
+                        
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(253, 253, 150, 0.45)';
+                        ctx.strokeStyle = 'rgba(253, 253, 150, 0.85)';
+                        ctx.lineWidth = 1.5;
+
+                        textContent.items.forEach(item => {
+                            const str = item.str.toLowerCase();
+                            if (str.includes(pdfSearchQuery)) {
+                                const x = item.transform[4];
+                                const y = item.transform[5];
+                                const w = item.width;
+                                const h = item.height || Math.sqrt(item.transform[2] * item.transform[2] + item.transform[3] * item.transform[3]);
+                                
+                                const rect = pageViewport.convertToViewportRectangle([x, y, x + w, y + h]);
+                                
+                                ctx.beginPath();
+                                ctx.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                                ctx.fill();
+                                ctx.stroke();
+                            }
+                        });
+                        ctx.restore();
+                    } catch (e) {
+                        console.warn("Error dibujando resaltado:", e);
+                    }
+                }
+
                 container.appendChild(canvas);
 
                 pageNum = num;
@@ -7386,6 +7456,39 @@
                 viewport: viewport,
                 background: 'white'
             }).promise;
+
+            // DIBUJAR RESALTADOS DE BÚSQUEDA SI HAY UNA QUERY ACTIVA
+            if (pdfSearchQuery) {
+                try {
+                    const textContent = await page.getTextContent();
+                    const pageViewport = page.getViewport({ scale: currentScale });
+                    
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(253, 253, 150, 0.45)';
+                    ctx.strokeStyle = 'rgba(253, 253, 150, 0.85)';
+                    ctx.lineWidth = 1.5;
+
+                    textContent.items.forEach(item => {
+                        const str = item.str.toLowerCase();
+                        if (str.includes(pdfSearchQuery)) {
+                            const x = item.transform[4];
+                            const y = item.transform[5];
+                            const w = item.width;
+                            const h = item.height || Math.sqrt(item.transform[2] * item.transform[2] + item.transform[3] * item.transform[3]);
+                            
+                            const rect = pageViewport.convertToViewportRectangle([x, y, x + w, y + h]);
+                            
+                            ctx.beginPath();
+                            ctx.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                            ctx.fill();
+                            ctx.stroke();
+                        }
+                    });
+                    ctx.restore();
+                } catch (e) {
+                    console.warn("Error dibujando resaltado:", e);
+                }
+            }
 
             container.appendChild(canvas);
             
@@ -7457,6 +7560,143 @@
                 renderPage(pageNum, true);
                 renderBookmarkList();
             }
+        }
+
+        // === FUNCIONALIDAD DE BÚSQUEDA DE PALABRAS ===
+        function toggleSearchPanel() {
+            const searchPanel = document.getElementById('search-panel');
+            const bookmarkPanel = document.getElementById('bookmark-panel');
+            
+            if (bookmarkPanel) bookmarkPanel.classList.remove('active');
+            
+            if (searchPanel.style.display === 'none' || !searchPanel.classList.contains('active')) {
+                searchPanel.style.display = 'block';
+                searchPanel.classList.add('active');
+                document.getElementById('pdf-search-input').focus();
+            } else {
+                searchPanel.style.display = 'none';
+                searchPanel.classList.remove('active');
+            }
+        }
+
+        async function performPdfSearch() {
+            const input = document.getElementById('pdf-search-input');
+            const query = input.value.trim().toLowerCase();
+            const list = document.getElementById('pdf-search-results-list');
+            const summary = document.getElementById('pdf-search-results-summary');
+            const countSpan = document.getElementById('pdf-search-count');
+
+            if (!query) {
+                alert("Por favor ingresa una palabra a buscar.");
+                return;
+            }
+
+            list.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: var(--lumin-yellow);">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Buscando...
+                </div>
+            `;
+            summary.style.display = 'none';
+            pdfSearchMatches = [];
+            currentSearchMatchIndex = -1;
+            pdfSearchQuery = query;
+
+            try {
+                for (let i = 1; i <= pdfDoc.numPages; i++) {
+                    const page = await pdfDoc.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const textItems = textContent.items.map(item => item.str).join(" ");
+                    
+                    let index = 0;
+                    while (true) {
+                        const pos = textItems.toLowerCase().indexOf(query, index);
+                        if (pos === -1) break;
+                        
+                        const start = Math.max(0, pos - 20);
+                        const end = Math.min(textItems.length, pos + query.length + 20);
+                        let snippet = textItems.substring(start, end);
+                        if (start > 0) snippet = "..." + snippet;
+                        if (end < textItems.length) snippet = snippet + "...";
+
+                        pdfSearchMatches.push({
+                            pageNum: i,
+                            snippet: snippet,
+                            queryStart: pos
+                        });
+
+                        index = pos + query.length;
+                        if (pdfSearchMatches.length >= 200) break;
+                    }
+                    if (pdfSearchMatches.length >= 200) break;
+                }
+
+                if (pdfSearchMatches.length === 0) {
+                    list.innerHTML = `<div class="bookmark-empty">No se encontraron coincidencias.</div>`;
+                    summary.style.display = 'none';
+                    // Forzar re-render de la página actual para limpiar resaltados antiguos
+                    renderPage(pageNum);
+                } else {
+                    list.innerHTML = '';
+                    summary.style.display = 'flex';
+                    countSpan.textContent = `${pdfSearchMatches.length} coincidencias`;
+
+                    pdfSearchMatches.forEach((match, idx) => {
+                        const item = document.createElement('div');
+                        item.className = 'bookmark-item';
+                        item.onclick = () => jumpToSearchMatch(idx);
+                        
+                        const queryEscaped = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                        const highlightedSnippet = match.snippet.replace(new RegExp(`(${queryEscaped})`, 'gi'), '<strong style="color: var(--lumin-yellow); background: rgba(253, 253, 150, 0.25); font-weight: bold;">$1</strong>');
+
+                        item.innerHTML = `
+                            <div style="display:flex; flex-direction:column; gap:4px; width: 100%;">
+                                <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--lumin-gold);">
+                                    <span>Página ${match.pageNum}</span>
+                                    <span>#${idx + 1}</span>
+                                </div>
+                                <div style="font-size:12px; line-height:1.4; color:var(--foreground); word-break:break-word; text-align:left;">
+                                    ${highlightedSnippet}
+                                </div>
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+
+                    jumpToSearchMatch(0);
+                }
+            } catch (err) {
+                console.error("Error buscando en PDF:", err);
+                list.innerHTML = `<div class="bookmark-empty">Error realizando la búsqueda.</div>`;
+            }
+        }
+
+        function jumpToSearchMatch(index) {
+            if (index < 0 || index >= pdfSearchMatches.length) return;
+            currentSearchMatchIndex = index;
+            
+            const match = pdfSearchMatches[index];
+            const list = document.getElementById('pdf-search-results-list');
+            const items = list.children;
+            
+            for (let i = 0; i < items.length; i++) {
+                if (i === index) {
+                    items[i].classList.add('active');
+                    items[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else {
+                    items[i].classList.remove('active');
+                }
+            }
+
+            document.getElementById('pdf-search-count').textContent = `${index + 1} / ${pdfSearchMatches.length}`;
+            jumpToPage(match.pageNum);
+        }
+
+        function navigatePdfSearch(direction) {
+            if (pdfSearchMatches.length === 0) return;
+            let nextIdx = currentSearchMatchIndex + direction;
+            if (nextIdx < 0) nextIdx = pdfSearchMatches.length - 1;
+            if (nextIdx >= pdfSearchMatches.length) nextIdx = 0;
+            jumpToSearchMatch(nextIdx);
         }
 
         function jumpToPage(val) {
