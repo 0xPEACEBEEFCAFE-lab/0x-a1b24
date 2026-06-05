@@ -7265,6 +7265,7 @@
                     if (scrollActiveObserver) { scrollActiveObserver.disconnect(); scrollActiveObserver = null; }
 
                     container.innerHTML = '';
+                    container.scrollTop = 0; // CRÍTICO: resetear posición de scroll del navegador
                     container.classList.add('scroll-mode');
 
                     const firstPage = await pdfDoc.getPage(1);
@@ -7290,15 +7291,20 @@
                         container.appendChild(pageContainer);
                     }
 
-                    // Desplazar PRIMERO al destino antes de activar observadores
+                    // Desplazar al destino usando scrollTop directo (más fiable que scrollIntoView)
                     const initTarget = document.getElementById('scroll-page-' + num);
                     if (initTarget) {
-                        initTarget.scrollIntoView({ behavior: 'auto', block: 'start' });
+                        container.scrollTop = initTarget.offsetTop - container.offsetTop;
                     }
 
-                    // Forzar renderizado de la página destino inmediatamente
-                    if (initTarget && !renderedPages.has(num)) {
-                        renderPageInScrollMode(num, initTarget);
+                    // Renderizar la página destino y las circundantes para visibilidad inmediata
+                    const startRender = Math.max(1, num - 2);
+                    const endRender = Math.min(pdfDoc.numPages, num + 4);
+                    for (let r = startRender; r <= endRender; r++) {
+                        const el = document.getElementById('scroll-page-' + r);
+                        if (el && !renderedPages.has(r)) {
+                            renderPageInScrollMode(r, el);
+                        }
                     }
 
                     // Crear observadores con root: container (el elemento scrolleable real)
@@ -7353,10 +7359,14 @@
                     }, { root: container, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
 
                     // Activar observadores DESPUÉS de que el layout y scroll estén estables
-                    // Usamos doble requestAnimationFrame para garantizar que el layout se completó
                     requestAnimationFrame(() => {
                         requestAnimationFrame(() => {
                             if (!isScrollMode) return;
+                            // Asegurar scroll al destino una vez más tras layout completo
+                            const finalTarget = document.getElementById('scroll-page-' + num);
+                            if (finalTarget) {
+                                container.scrollTop = finalTarget.offsetTop - container.offsetTop;
+                            }
                             container.querySelectorAll('.scroll-page-container').forEach(el => {
                                 if (scrollObserver) scrollObserver.observe(el);
                                 if (scrollActiveObserver) scrollActiveObserver.observe(el);
