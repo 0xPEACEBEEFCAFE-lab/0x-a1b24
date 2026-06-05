@@ -7300,7 +7300,7 @@
                                 }
                             }
                         });
-                    }, { root: container, rootMargin: '100% 0px', threshold: 0.01 });
+                    }, { root: null, rootMargin: '100% 0px', threshold: 0.01 });
 
                     scrollActiveObserver = new IntersectionObserver((entries) => {
                         entries.forEach(entry => {
@@ -7333,7 +7333,7 @@
                                 }
                             }
                         });
-                    }, { root: container, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
+                    }, { root: null, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
 
                     container.querySelectorAll('.scroll-page-container').forEach(el => {
                         scrollObserver.observe(el);
