@@ -5061,6 +5061,7 @@
         let scrollModeBookId = null;
         let _currentOperationId = 0;
         let isOpeningBook = false;
+        let isProgrammaticScroll = false;
 
 
 
@@ -7288,7 +7289,9 @@
                     }
 
                     scrollObserver = new IntersectionObserver((entries) => {
+                        if (isProgrammaticScroll) return;
                         entries.forEach(entry => {
+                            if (entry.boundingClientRect.height === 0) return;
                             const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
                             if (entry.isIntersecting) {
                                 if (!renderedPages.has(pageIdx)) {
@@ -7303,7 +7306,9 @@
                     }, { root: null, rootMargin: '100% 0px', threshold: 0.01 });
 
                     scrollActiveObserver = new IntersectionObserver((entries) => {
+                        if (isProgrammaticScroll) return;
                         entries.forEach(entry => {
+                            if (entry.boundingClientRect.height === 0) return;
                             if (entry.isIntersecting) {
                                 const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
                                 pageNum = pageIdx;
@@ -7344,10 +7349,17 @@
                     }, 150);
                 }
 
+                isProgrammaticScroll = true;
                 const targetContainer = document.getElementById('scroll-page-' + num);
                 if (targetContainer) {
-                    targetContainer.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+                    targetContainer.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    if (!renderedPages.has(num)) {
+                        renderPageInScrollMode(num, targetContainer);
+                    }
                 }
+                setTimeout(() => {
+                    isProgrammaticScroll = false;
+                }, 200);
                 return;
             }
 
