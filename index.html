@@ -367,6 +367,13 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        body.custom-bg {
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+
         h1, h2, h3, h4, h5, h6, .font-heading {
             font-family: 'Fraunces', 'Cinzel', Georgia, serif;
             font-weight: 600;
@@ -1476,11 +1483,11 @@
 
         /* Transparencia en el visor cuando hay fondo personalizado */
         body.custom-bg #viewer-section {
-            background: rgba(10, 10, 10, 0.85);
+            background: rgba(10, 10, 10, 0.8) !important;
         }
 
-        :root[data-theme="light"].custom-bg #viewer-section {
-            background: rgba(245, 245, 245, 0.85);
+        :root[data-theme="light"] body.custom-bg #viewer-section {
+            background: rgba(254, 253, 251, 0.85) !important;
         }
 
         /* === MODO AUDIO FOCUS === */
@@ -1731,7 +1738,101 @@
             height: 100%;
             border-radius: 8px;
             box-shadow: none;
-            margin-bottom: 0;
+        }
+
+        /* === SCROLL NAVIGATOR CAPSULE === */
+        .scroll-navigator-capsule {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(253, 246, 227, 0.15);
+            border-radius: 30px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 99;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: opacity 0.3s, transform 0.3s;
+            max-width: 90vw;
+            width: 450px;
+        }
+
+        :root[data-theme="light"] .scroll-navigator-capsule {
+            background: rgba(253, 246, 227, 0.9);
+            border-color: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+        }
+
+        .scroll-navigator-capsule.hidden {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+            pointer-events: none;
+        }
+
+        .scroll-nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--foreground);
+            font-size: 14px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .scroll-nav-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        :root[data-theme="light"] .scroll-nav-btn:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .scroll-nav-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border);
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .scroll-nav-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--lumin-yellow);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid var(--background);
+            transition: transform 0.1s;
+        }
+
+        .scroll-nav-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .scroll-nav-indicator {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+            user-select: none;
         }
 
         /* === MODO PANTALLA COMPLETA - HEADER OCULTO === */
@@ -2347,13 +2448,38 @@
             z-index: 9999;
         }
 
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(253, 253, 150, 0.2);
-            border-top-color: var(--lumin-yellow);
+        .spinner-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner-logo {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            animation: pulse-soft 2s ease-in-out infinite;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
+            padding: 3px;
+            background: conic-gradient(from 0deg, transparent 30%, var(--lumin-yellow));
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), black 100%);
+            mask: radial-gradient(farthest-side, transparent calc(100% - 4px), black 100%);
             animation: spin 1s linear infinite;
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.08); opacity: 1; }
         }
 
         @keyframes spin {
@@ -2364,6 +2490,7 @@
 
         /* === LLUVIA DE VELAS === */
         #rain-container {
+            display: none !important;
             position: fixed;
             top: 0;
             left: 0;
@@ -4162,7 +4289,10 @@
     <!-- LOADER -->
     <div id="loader">
         <div id="loader-content-wrap" style="display:flex; flex-direction:column; align-items:center;">
-            <div class="spinner" id="loader-spinner"></div>
+            <div class="spinner-container">
+                <div class="spinner-ring"></div>
+                <img src="Logo.png" class="spinner-logo" alt="Lumin Logo">
+            </div>
             <p style="margin-top:25px; color:var(--lumin-yellow); font-weight:600;" id="loader-text">Cargando...</p>
         </div>
         <div id="ready-container" style="display:none; flex-direction:column; align-items:center; gap:20px;">
@@ -4889,6 +5019,18 @@
             <i class="fas fa-hand-pointer" style="margin-right: 6px;"></i>
             Toca los bordes para navegar • Desliza para cambiar página
         </div>
+
+        <!-- Barra de navegación flotante para modo scroll -->
+        <div id="scroll-navigator" class="scroll-navigator-capsule" style="display: none;">
+            <button class="scroll-nav-btn" onclick="changePage(-1)" title="Página Anterior">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <input type="range" id="scroll-page-slider" class="scroll-nav-slider" min="1" max="100" value="1" oninput="onScrollSliderInput(this.value)" onchange="onScrollSliderChange(this.value)">
+            <span id="scroll-page-indicator" class="scroll-nav-indicator">1 / 100</span>
+            <button class="scroll-nav-btn" onclick="changePage(1)" title="Página Siguiente">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
     </section>
 
     <script>
@@ -5190,8 +5332,8 @@
 
         // === HANDLER UNIFICADO DE INICIALIZACIÓN ===
         window.addEventListener('load', () => {
-            // 1. Lluvia de velas
-            initRain();
+            // 1. Lluvia de velas (Desactivada globalmente por solicitud del usuario)
+            // initRain();
 
             // 2. Gestos táctiles
             initTouchGestures();
@@ -5605,6 +5747,22 @@
             }
         }
 
+        // === SCROLL MODE SLIDER HANDLERS ===
+        function onScrollSliderInput(value) {
+            const indicator = document.getElementById('scroll-page-indicator');
+            if (indicator && pdfDoc) {
+                indicator.textContent = `${value} / ${pdfDoc.numPages}`;
+            }
+        }
+
+        function onScrollSliderChange(value) {
+            const pageNumVal = parseInt(value);
+            if (pdfDoc && pageNumVal >= 1 && pageNumVal <= pdfDoc.numPages) {
+                pageNum = pageNumVal;
+                renderPage(pageNumVal, true);
+            }
+        }
+
         // === TOGGLE MODO VISTA ===
         function toggleViewMode() {
             isScrollMode = !isScrollMode;
@@ -5619,11 +5777,35 @@
                 if (iconMobile) iconMobile.className = 'fas fa-scroll';
                 if (btn) btn.title = 'Modo Scroll';
                 if (btnMobile) btnMobile.title = 'Modo Scroll';
+                
+                // Mostrar y configurar el navegador flotante inferior
+                const scrollNav = document.getElementById('scroll-navigator');
+                if (scrollNav) {
+                    scrollNav.style.display = 'flex';
+                    if (!isHeaderHidden) {
+                        scrollNav.classList.remove('hidden');
+                    } else {
+                        scrollNav.classList.add('hidden');
+                    }
+                    const slider = document.getElementById('scroll-page-slider');
+                    if (slider && pdfDoc) {
+                        slider.max = pdfDoc.numPages;
+                        slider.value = pageNum;
+                    }
+                    const indicator = document.getElementById('scroll-page-indicator');
+                    if (indicator && pdfDoc) {
+                        indicator.textContent = `${pageNum} / ${pdfDoc.numPages}`;
+                    }
+                }
             } else {
                 if (icon) icon.className = 'fas fa-file-alt';
                 if (iconMobile) iconMobile.className = 'fas fa-file-alt';
                 if (btn) btn.title = 'Modo Página';
                 if (btnMobile) btnMobile.title = 'Modo Página';
+                
+                // Ocultar el navegador flotante inferior
+                const scrollNav = document.getElementById('scroll-navigator');
+                if (scrollNav) scrollNav.style.display = 'none';
             }
 
             const pageNavGroup = document.getElementById('page-nav-group');
@@ -5646,6 +5828,7 @@
             const header = document.getElementById('viewer-header');
             const icon = document.getElementById('toggle-header-icon');
             const iconMobile = document.getElementById('toggle-header-icon-mobile');
+            const scrollNav = document.getElementById('scroll-navigator');
 
             isHeaderHidden = !isHeaderHidden;
 
@@ -5653,10 +5836,12 @@
                 header.classList.add('hidden');
                 if (icon) icon.className = 'fas fa-eye';
                 if (iconMobile) iconMobile.className = 'fas fa-eye';
+                if (scrollNav) scrollNav.classList.add('hidden');
             } else {
                 header.classList.remove('hidden');
                 if (icon) icon.className = 'fas fa-eye-slash';
                 if (iconMobile) iconMobile.className = 'fas fa-eye-slash';
+                if (scrollNav && isScrollMode) scrollNav.classList.remove('hidden');
             }
         }
 
@@ -6637,6 +6822,8 @@
                 if (pageNavGroup) pageNavGroup.style.display = 'flex';
                 if (pageNavGroupMobile) pageNavGroupMobile.style.display = 'flex';
             }
+            const scrollNav = document.getElementById('scroll-navigator');
+            if (scrollNav) scrollNav.style.display = 'none';
 
             // 12. Resetear header oculto
             if (isHeaderHidden) {
@@ -7129,6 +7316,15 @@
                                 if (currentUser && currentBookId) {
                                     localStorage.setItem(`lumin_progress_${currentUser.telegram}_${currentBookId}`, pageIdx);
                                     localStorage.setItem(`lumin_total_${currentUser.telegram}_${currentBookId}`, pdfDoc.numPages);
+                                }
+                                
+                                const scrollSlider = document.getElementById('scroll-page-slider');
+                                if (scrollSlider && document.activeElement !== scrollSlider) {
+                                    scrollSlider.value = pageIdx;
+                                }
+                                const scrollIndicator = document.getElementById('scroll-page-indicator');
+                                if (scrollIndicator) {
+                                    scrollIndicator.textContent = `${pageIdx} / ${pdfDoc.numPages}`;
                                 }
                                 
                                 if (ttsIsPanelOpen && ttsCurrentPage !== pageIdx) {
