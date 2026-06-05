@@ -2588,6 +2588,49 @@
             backface-visibility: hidden;
         }
 
+        @keyframes slideInUp {
+            0% {
+                transform: translateY(60px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInDown {
+            0% {
+                transform: translateY(-60px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pageFadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .page-vertical-next-animation {
+            animation: slideInUp 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .page-vertical-prev-animation {
+            animation: slideInDown 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .page-vertical-fade-animation {
+            animation: pageFadeIn 0.3s ease forwards;
+        }
+
         /* === RESPONSIVE === */
         @media (max-width: 1024px) {
             .viewer-content-area {
@@ -5062,6 +5105,9 @@
         let _currentOperationId = 0;
         let isOpeningBook = false;
         let isProgrammaticScroll = false;
+        let lastPageNum = 1;
+        let lastWheelTime = 0;
+        let touchEndY = 0;
 
 
 
@@ -7253,159 +7299,73 @@
             const container = document.getElementById('viewer-container');
 
             if (isScrollMode) {
-                // --- INICIALIZACIÓN DEL MODO SCROLL ---
-                if (!scrollModeInitialized || scrollModeScale !== currentScale || scrollModeBookId !== currentBookId) {
-                    scrollModeInitialized = true;
-                    scrollModeScale = currentScale;
-                    scrollModeBookId = currentBookId;
-                    renderedPages.clear();
-                    isProgrammaticScroll = true;
-                    
-                    if (scrollObserver) { scrollObserver.disconnect(); scrollObserver = null; }
-                    if (scrollActiveObserver) { scrollActiveObserver.disconnect(); scrollActiveObserver = null; }
+                // Desconectar observadores heredados del modo anterior por seguridad
+                if (scrollObserver) { scrollObserver.disconnect(); scrollObserver = null; }
+                if (scrollActiveObserver) { scrollActiveObserver.disconnect(); scrollActiveObserver = null; }
+                scrollModeInitialized = false;
 
-                    container.innerHTML = '';
-                    container.scrollTop = 0; // CRÍTICO: resetear posición de scroll del navegador
-                    container.classList.add('scroll-mode');
+                container.classList.add('scroll-mode');
+                container.innerHTML = '';
+                container.scrollTop = 0;
 
-                    const firstPage = await pdfDoc.getPage(1);
-                    const viewport1 = firstPage.getViewport({ scale: currentScale });
-                    const width = viewport1.width;
-                    const height = viewport1.height;
+                const page = await pdfDoc.getPage(num);
+                const viewport = page.getViewport({ scale: currentScale });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { alpha: false });
 
-                    for (let i = 1; i <= pdfDoc.numPages; i++) {
-                        const pageContainer = document.createElement('div');
-                        pageContainer.className = 'scroll-page-container';
-                        pageContainer.id = 'scroll-page-' + i;
-                        pageContainer.setAttribute('data-page-number', i);
-                        pageContainer.style.aspectRatio = `${width} / ${height}`;
-                        pageContainer.style.width = '100%';
-                        pageContainer.style.maxWidth = `min(95vw, ${width}px)`;
-                        
-                        pageContainer.innerHTML = `
-                            <div class="page-loading-placeholder">
-                                <i class="fas fa-spinner"></i>
-                                <span>Página ${i} de ${pdfDoc.numPages}</span>
-                            </div>
-                        `;
-                        container.appendChild(pageContainer);
-                    }
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                // Determinar dirección de animación vertical
+                let animClass = 'page-canvas';
+                if (num > lastPageNum) {
+                    animClass += ' page-vertical-next-animation';
+                } else if (num < lastPageNum) {
+                    animClass += ' page-vertical-prev-animation';
+                } else {
+                    animClass += ' page-vertical-fade-animation';
+                }
+                canvas.className = animClass;
 
-                    // Desplazar al destino usando scrollTop directo (más fiable que scrollIntoView)
-                    const initTarget = document.getElementById('scroll-page-' + num);
-                    if (initTarget) {
-                        container.scrollTop = initTarget.offsetTop - container.offsetTop;
-                    }
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
 
-                    // Renderizar la página destino y las circundantes para visibilidad inmediata
-                    const startRender = Math.max(1, num - 2);
-                    const endRender = Math.min(pdfDoc.numPages, num + 4);
-                    for (let r = startRender; r <= endRender; r++) {
-                        const el = document.getElementById('scroll-page-' + r);
-                        if (el && !renderedPages.has(r)) {
-                            renderPageInScrollMode(r, el);
-                        }
-                    }
+                await page.render({
+                    canvasContext: ctx,
+                    viewport: viewport,
+                    background: 'white'
+                }).promise;
 
-                    // Crear observadores con root: container (el elemento scrolleable real)
-                    scrollObserver = new IntersectionObserver((entries) => {
-                        if (isProgrammaticScroll) return;
-                        entries.forEach(entry => {
-                            const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
-                            if (entry.isIntersecting) {
-                                if (!renderedPages.has(pageIdx)) {
-                                    renderPageInScrollMode(pageIdx, entry.target);
-                                }
-                            } else {
-                                if (renderedPages.has(pageIdx)) {
-                                    unloadPageInScrollMode(pageIdx, entry.target);
-                                }
-                            }
-                        });
-                    }, { root: container, rootMargin: '200% 0px', threshold: 0.01 });
+                container.appendChild(canvas);
 
-                    scrollActiveObserver = new IntersectionObserver((entries) => {
-                        if (isProgrammaticScroll) return;
-                        entries.forEach(entry => {
-                            if (entry.isIntersecting) {
-                                const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
-                                pageNum = pageIdx;
-                                
-                                const pageInput = document.getElementById('page-input');
-                                const pageInputMobile = document.getElementById('page-input-mobile');
-                                if (pageInput && document.activeElement !== pageInput) pageInput.value = pageIdx;
-                                if (pageInputMobile && document.activeElement !== pageInputMobile) pageInputMobile.value = pageIdx;
-                                
-                                if (currentUser && currentBookId) {
-                                    localStorage.setItem(`lumin_progress_${currentUser.telegram}_${currentBookId}`, pageIdx);
-                                    localStorage.setItem(`lumin_total_${currentUser.telegram}_${currentBookId}`, pdfDoc.numPages);
-                                }
-                                
-                                const scrollSlider = document.getElementById('scroll-page-slider');
-                                if (scrollSlider && document.activeElement !== scrollSlider) {
-                                    scrollSlider.value = pageIdx;
-                                }
-                                const scrollIndicator = document.getElementById('scroll-page-indicator');
-                                if (scrollIndicator) {
-                                    scrollIndicator.textContent = `${pageIdx} / ${pdfDoc.numPages}`;
-                                }
-                                
-                                if (ttsIsPanelOpen && ttsCurrentPage !== pageIdx) {
-                                    ttsCurrentPage = pageIdx;
-                                    updateTTSStatus();
-                                }
-                            }
-                        });
-                    }, { root: container, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
+                pageNum = num;
+                lastPageNum = num;
 
-                    // Activar observadores DESPUÉS de que el layout y scroll estén estables
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            if (!isScrollMode) return;
-                            // Asegurar scroll al destino una vez más tras layout completo
-                            const finalTarget = document.getElementById('scroll-page-' + num);
-                            if (finalTarget) {
-                                container.scrollTop = finalTarget.offsetTop - container.offsetTop;
-                            }
-                            container.querySelectorAll('.scroll-page-container').forEach(el => {
-                                if (scrollObserver) scrollObserver.observe(el);
-                                if (scrollActiveObserver) scrollActiveObserver.observe(el);
-                            });
-                            // Desbloquear observadores después de que se estabilicen
-                            setTimeout(() => { isProgrammaticScroll = false; }, 100);
-                        });
-                    });
+                document.getElementById('page-input').value = num;
+                document.getElementById('page-input-mobile').value = num;
 
-                    return; // Ya hicimos el scroll y render dentro del bloque de init
+                const slider = document.getElementById('scroll-page-slider');
+                if (slider) {
+                    slider.value = num;
+                }
+                const indicator = document.getElementById('scroll-page-indicator');
+                if (indicator) {
+                    indicator.textContent = `${num} / ${pdfDoc.numPages}`;
                 }
 
-                // --- NAVEGACIÓN DENTRO DEL MODO SCROLL (ya inicializado) ---
-                isProgrammaticScroll = true;
-                const targetContainer = document.getElementById('scroll-page-' + num);
-                if (targetContainer) {
-                    targetContainer.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-                    if (!renderedPages.has(num)) {
-                        renderPageInScrollMode(num, targetContainer);
-                    }
+                if (currentUser && currentBookId) {
+                    localStorage.setItem(`lumin_progress_${currentUser.telegram}_${currentBookId}`, num);
+                    localStorage.setItem(`lumin_total_${currentUser.telegram}_${currentBookId}`, pdfDoc.numPages);
                 }
-                setTimeout(() => {
-                    isProgrammaticScroll = false;
-                }, 300);
+
+                if (ttsIsPanelOpen && ttsCurrentPage !== num) {
+                    ttsCurrentPage = num;
+                    updateTTSStatus();
+                }
                 return;
             }
 
-            // === MODO PÁGINA (no scroll) ===
-            // Limpiar estado de scroll mode al salir
-            if (scrollModeInitialized) {
-                scrollModeInitialized = false;
-                scrollModeScale = 0;
-                scrollModeBookId = null;
-                renderedPages.clear();
-                isProgrammaticScroll = false;
-                if (scrollObserver) { scrollObserver.disconnect(); scrollObserver = null; }
-                if (scrollActiveObserver) { scrollActiveObserver.disconnect(); scrollActiveObserver = null; }
-            }
-
+            // === MODO PÁGINA HORIZONTAL ===
             container.classList.remove('scroll-mode');
             container.innerHTML = '';
 
@@ -7428,19 +7388,23 @@
             }).promise;
 
             container.appendChild(canvas);
+            
+            pageNum = num;
+            lastPageNum = num;
+
             document.getElementById('page-input').value = num;
             document.getElementById('page-input-mobile').value = num;
-            
+
             if (currentUser && currentBookId) {
                 localStorage.setItem(`lumin_progress_${currentUser.telegram}_${currentBookId}`, num);
                 localStorage.setItem(`lumin_total_${currentUser.telegram}_${currentBookId}`, pdfDoc.numPages);
             }
-            
+
             if (ttsIsPanelOpen && ttsCurrentPage !== num) {
                 ttsCurrentPage = num;
                 updateTTSStatus();
                 updateAudioFocusIndicator();
-                
+
                 if (ttsIsPlaying) {
                     stopTTS();
                     setTimeout(() => startTTS(), 300);
@@ -7484,17 +7448,6 @@
             }
         }
 
-        function unloadPageInScrollMode(num, targetElement) {
-            if (!renderedPages.has(num)) return;
-            renderedPages.delete(num);
-            
-            targetElement.innerHTML = `
-                <div class="page-loading-placeholder">
-                    <i class="fas fa-spinner"></i>
-                    <span>Página ${num} de ${pdfDoc.numPages}</span>
-                </div>
-            `;
-        }
 
         function changePage(delta) {
             if (!pdfDoc) return;
@@ -7563,6 +7516,18 @@
                     e.preventDefault();
                     changePage(1);
                     break;
+                case 'ArrowUp':
+                    if (isScrollMode) {
+                        e.preventDefault();
+                        changePage(-1);
+                    }
+                    break;
+                case 'ArrowDown':
+                    if (isScrollMode) {
+                        e.preventDefault();
+                        changePage(1);
+                    }
+                    break;
                 case 'Home':
                     e.preventDefault();
                     jumpToPage(1);
@@ -7618,21 +7583,49 @@
 
             viewerSection.addEventListener('touchend', function (e) {
                 touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
                 handleSwipe();
             }, { passive: true });
+
+            // Evento wheel para pasar página de forma vertical en modo cascada
+            const viewerContainer = document.getElementById('viewer-container');
+            viewerContainer.addEventListener('wheel', function (e) {
+                if (!isScrollMode) return;
+                
+                e.preventDefault();
+                
+                const now = Date.now();
+                if (now - lastWheelTime < 500) return; // Cooldown de 500ms
+                
+                if (e.deltaY > 0) {
+                    changePage(1);
+                    lastWheelTime = now;
+                } else if (e.deltaY < 0) {
+                    changePage(-1);
+                    lastWheelTime = now;
+                }
+            }, { passive: false });
         }
 
         function handleSwipe() {
-            if (isScrollMode) return;
-
             const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    changePage(1);
-                } else {
-                    changePage(-1);
+            if (isScrollMode) {
+                const diffY = touchStartY - touchEndY;
+                if (Math.abs(diffY) > swipeThreshold) {
+                    if (diffY > 0) {
+                        changePage(1);
+                    } else {
+                        changePage(-1);
+                    }
+                }
+            } else {
+                const diffX = touchStartX - touchEndX;
+                if (Math.abs(diffX) > swipeThreshold) {
+                    if (diffX > 0) {
+                        changePage(1);
+                    } else {
+                        changePage(-1);
+                    }
                 }
             }
         }
