@@ -287,19 +287,69 @@
     </script>
 
     <style>
-        /* === PALETA LUMIN: NEGRO Y AMARILLO PASTEL === */
-        :root {
-            --lumin-black: #0a0a0a;
-            --lumin-dark: #141414;
-            --lumin-gray: #1e1e1e;
-            --lumin-gray-light: #2a2a2a;
-            --lumin-yellow: #FDFD96;
-            --lumin-yellow-soft: #f5f580;
-            --lumin-yellow-pale: #e8e470;
-            --lumin-gold: #d4b894;
-            --lumin-gold-dark: #b09070;
-            --lumin-text: #e8e8e8;
-            --lumin-text-muted: #a0a0a0;
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap');
+
+        /* === PALETA LUMIN: PREMIUM EDITORIAL COLOR SYSTEM === */
+        :root, :root[data-theme="dark"] {
+            --background: #0A0A0A;
+            --foreground: #FEFDFB;
+            --card: #141414;
+            --card-foreground: #FEFDFB;
+            --primary: #FEFDFB;
+            --primary-foreground: #0D0D0D;
+            --secondary: #1A1A1A;
+            --secondary-foreground: #FEFDFB;
+            --muted: #1A1A1A;
+            --muted-foreground: #8A8A8A;
+            --accent: #FDF6E3;
+            --accent-foreground: #0D0D0D;
+            --border: rgba(253, 246, 227, 0.12);
+            --input: rgba(253, 246, 227, 0.06);
+            --radius: 16px;
+            
+            /* Old variables mapping for full backwards compatibility */
+            --lumin-black: var(--background);
+            --lumin-dark: var(--card);
+            --lumin-gray: var(--secondary);
+            --lumin-gray-light: var(--border);
+            --lumin-yellow: #FDF6E3;
+            --lumin-yellow-soft: #F5E6C8;
+            --lumin-yellow-pale: #EDD9A3;
+            --lumin-gold: #D4C49A;
+            --lumin-gold-dark: var(--muted-foreground);
+            --lumin-text: var(--foreground);
+            --lumin-text-muted: var(--muted-foreground);
+        }
+
+        :root[data-theme="light"] {
+            --background: #FEFDFB;
+            --foreground: #0D0D0D;
+            --card: #FDF6E3;
+            --card-foreground: #0D0D0D;
+            --primary: #0D0D0D;
+            --primary-foreground: #FDF6E3;
+            --secondary: #FEFDFB;
+            --secondary-foreground: #0D0D0D;
+            --muted: #F5F5F5;
+            --muted-foreground: #6B6B6B;
+            --accent: #0D0D0D;
+            --accent-foreground: #FDF6E3;
+            --border: #E5E5E5;
+            --input: #F5F5F5;
+            --radius: 16px;
+            
+            /* Old variables mapping for full backwards compatibility */
+            --lumin-black: var(--background);
+            --lumin-dark: var(--card);
+            --lumin-gray: var(--muted);
+            --lumin-gray-light: var(--border);
+            --lumin-yellow: #0D0D0D;
+            --lumin-yellow-soft: #C8B99A;
+            --lumin-yellow-pale: #A39679;
+            --lumin-gold: #6B6B6B;
+            --lumin-gold-dark: var(--muted-foreground);
+            --lumin-text: var(--foreground);
+            --lumin-text-muted: var(--muted-foreground);
         }
 
         * {
@@ -309,11 +359,125 @@
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: var(--lumin-black);
-            color: var(--lumin-text);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
             overflow-x: hidden;
             min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-heading {
+            font-family: 'Fraunces', 'Cinzel', Georgia, serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        /* === MODERN DESIGN SYSTEM TOKENS & UTILITIES === */
+        
+        /* Textura de papel mate sutil */
+        .paper-texture {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+        }
+
+        /* Transiciones suaves de tema */
+        .transition-theme {
+            transition: all 0.3s ease-out;
+        }
+
+        /* Glow para elementos de acento en modo oscuro */
+        .glow-accent {
+            box-shadow: 0 0 20px rgba(253, 246, 227, 0.12), 0 0 40px rgba(253, 246, 227, 0.04);
+        }
+        
+        /* Animaciones Flotantes */
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-20px) translateX(10px); }
+            50% { transform: translateY(-10px) translateX(-5px); }
+            75% { transform: translateY(-25px) translateX(5px); }
+        }
+
+        @keyframes float-medium {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            33% { transform: translateY(-15px) translateX(-10px); }
+            66% { transform: translateY(-25px) translateX(15px); }
+        }
+
+        @keyframes float-fast {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-30px) translateX(-10px); }
+        }
+
+        .animate-float-slow {
+            animation: float-slow 8s ease-in-out infinite;
+        }
+
+        .animate-float-medium {
+            animation: float-medium 6s ease-in-out infinite;
+        }
+
+        .animate-float-fast {
+            animation: float-fast 4s ease-in-out infinite;
+        }
+
+        /* Degradado animado suave de fondo */
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bg-glow-circles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+            display: block;
+            background: linear-gradient(
+                -45deg, 
+                rgba(245, 230, 200, 0.2), 
+                transparent, 
+                rgba(237, 217, 163, 0.15), 
+                transparent,
+                rgba(245, 230, 200, 0.1)
+            );
+            background-size: 400% 400%;
+            animation: gradient-shift 18s ease-in-out infinite;
+        }
+
+        :root[data-theme="light"] .bg-glow-circles {
+            background: linear-gradient(
+                -45deg, 
+                rgba(200, 185, 154, 0.15), 
+                transparent, 
+                rgba(163, 150, 121, 0.1), 
+                transparent,
+                rgba(200, 185, 154, 0.08)
+            );
+            background-size: 400% 400%;
+            animation: gradient-shift 18s ease-in-out infinite;
+        }
+
+        .bg-glow-circle {
+            display: none;
+        }
+
+        /* Grid Pattern overlay */
+        .bg-grid-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.008) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.008) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+
+        :root[data-theme="light"] .bg-grid-overlay {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.015) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 0, 0, 0.015) 1px, transparent 1px);
         }
 
         /* === VISTAS === */
@@ -333,31 +497,35 @@
 
         /* === LOGIN === */
         .login-container {
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.6), rgba(5, 5, 5, 0.8));
+            background: rgba(20, 20, 20, 0.5);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(253, 253, 150, 0.2);
-            border-radius: 30px;
-            padding: 60px 50px;
-            max-width: 460px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 50px 40px;
+            max-width: 440px;
             width: 90%;
             margin: auto;
             text-align: center;
-            box-shadow:
-                0 0 80px rgba(253, 253, 150, 0.08),
-                0 30px 60px rgba(0, 0, 0, 0.8),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             position: relative;
             overflow: hidden;
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
+        }
+
+        :root[data-theme="light"] .login-container {
+            background: rgba(253, 246, 227, 0.7);
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
         }
 
         .login-container:hover {
-            transform: translateY(-5px);
-            box-shadow:
-                0 0 100px rgba(253, 253, 150, 0.12),
-                0 40px 80px rgba(0, 0, 0, 0.9),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        :root[data-theme="light"] .login-container:hover {
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.1);
         }
 
         .login-container::before {
@@ -366,57 +534,75 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--lumin-yellow), transparent);
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--lumin-yellow-soft), transparent);
             opacity: 0.8;
+        }
+
+        .login-logo {
+            width: 100px;
+            height: auto;
+            margin: 0 auto 20px;
+            display: block;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .login-logo:hover {
+            transform: scale(1.08) rotate(3deg);
         }
 
         .pixel-input {
             width: 100%;
-            padding: 18px 22px;
-            margin-bottom: 22px;
-            background: rgba(30, 30, 30, 0.4);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            color: var(--lumin-text);
-            font-size: 16px;
-            font-weight: 300;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--foreground);
+            font-size: 15px;
+            font-weight: 400;
             letter-spacing: 0.5px;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .pixel-input:focus {
             outline: none;
-            border-color: rgba(253, 253, 150, 0.5);
-            background: rgba(40, 40, 40, 0.6);
-            box-shadow: 0 0 25px rgba(253, 253, 150, 0.15), inset 0 0 10px rgba(0, 0, 0, 0.5);
-            transform: translateY(-2px);
+            border-color: var(--lumin-yellow-soft);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 20px rgba(253, 246, 227, 0.08);
+            transform: translateY(-1px);
+        }
+
+        :root[data-theme="light"] .pixel-input:focus {
+            background: #ffffff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.04);
+            border-color: #0d0d0d;
         }
 
         .pixel-input::placeholder {
-            color: rgba(232, 232, 232, 0.3);
+            color: var(--muted-foreground);
+            opacity: 0.6;
             font-weight: 300;
         }
 
         .pixel-button {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, var(--lumin-yellow) 0%, var(--lumin-gold) 100%);
+            padding: 16px;
+            background: var(--primary);
             border: none;
-            border-radius: 16px;
-            color: var(--lumin-black);
+            border-radius: 14px;
+            color: var(--primary-foreground);
             font-weight: 600;
-            font-size: 16px;
+            font-size: 15px;
             letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden;
         }
@@ -476,352 +662,601 @@
         }
 
         /* === LIBRERÍA === */
+        
+        /* Sticky Premium Navbar */
+        .library-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(var(--background), 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        :root[data-theme="dark"] .library-navbar {
+            background: rgba(10, 10, 10, 0.75);
+        }
+        :root[data-theme="light"] .library-navbar {
+            background: rgba(254, 253, 251, 0.85);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .navbar-logo {
+            height: 38px;
+            width: auto;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15));
+            transition: transform 0.4s ease;
+        }
+
+        .navbar-brand:hover .navbar-logo {
+            transform: scale(1.08) rotate(3deg);
+        }
+
+        .navbar-title {
+            font-family: 'Fraunces', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--foreground);
+            letter-spacing: -0.02em;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-btn:hover {
+            background: var(--foreground);
+            color: var(--background);
+            border-color: var(--foreground);
+            transform: translateY(-1px);
+        }
+
+        .navbar-btn.btn-admin {
+            border-color: var(--lumin-yellow-soft);
+            color: var(--foreground);
+            background: rgba(253, 246, 227, 0.05);
+        }
+        
+        :root[data-theme="light"] .navbar-btn.btn-admin {
+            border-color: #0d0d0d;
+            background: rgba(13, 13, 13, 0.03);
+        }
+
+        .navbar-btn.btn-admin:hover {
+            background: var(--foreground);
+            color: var(--background);
+        }
+
+        .navbar-btn.btn-logout {
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .navbar-btn.btn-logout:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
         .library-container {
-            padding: 20px;
+            padding: 90px 24px 40px;
             overflow-y: auto;
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
         }
 
-        /* Cuando el carrusel está visible y no hay búsqueda, centrar verticalmente */
-        .library-container:not(:has(.books-grid.active)) {
-            justify-content: center;
+        .library-hero-section {
+            width: 100%;
+            max-width: 900px;
+            margin: 30px 0 24px;
+            text-align: left;
+            position: relative;
         }
 
-        .library-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 30px 20px;
-            background: linear-gradient(180deg, rgba(253, 253, 150, 0.05), transparent);
-            border-bottom: 1px solid rgba(253, 253, 150, 0.1);
+        .library-hero-section h2 {
+            font-family: 'Fraunces', serif;
+            color: var(--foreground);
+            font-size: 42px;
+            font-weight: 800;
+            line-clamp: 2;
+            margin-bottom: 8px;
+            letter-spacing: -0.03em;
         }
 
-        .library-header h2 {
-            font-family: 'Cinzel', serif;
-            color: var(--lumin-yellow);
-            font-size: 28px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(253, 253, 150, 0.3);
+        @media (max-width: 640px) {
+            .library-hero-section h2 {
+                font-size: 30px;
+            }
         }
 
-        .search-container {
-            margin-top: 20px;
+        .library-hero-section p {
+            color: var(--muted-foreground);
+            font-size: 16px;
+            font-weight: 400;
+            max-width: 600px;
+            line-height: 1.6;
         }
 
-        .search-container .pixel-input {
-            margin-bottom: 0;
-            min-width: 320px;
-            background: var(--lumin-dark);
+        /* Stats Badges */
+        .stats-badges-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .stats-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--muted-foreground);
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stats-badge:hover {
+            transform: translateY(-1px);
+            border-color: var(--foreground);
+        }
+
+        .stats-badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #10B981;
+            box-shadow: 0 0 8px #10B981;
+        }
+
+        .stats-badge-dot.pulse {
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* Modern Search Bar Container */
+        .search-bar-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted-foreground);
+            pointer-events: none;
+            font-size: 14px;
+        }
+
+        .search-bar-input {
+            width: 100%;
+            padding: 14px 44px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--foreground);
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .search-bar-input:focus {
+            outline: none;
+            border-color: var(--foreground);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            transform: translateY(-1px);
+        }
+
+        .search-bar-clear {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s ease;
+            display: none;
+        }
+
+        .search-bar-clear:hover {
+            color: var(--foreground);
         }
 
         /* === CARRUSEL === */
         .carousel-container {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 40px;
-            width: 100%;
-            max-width: 800px;
-            min-height: 450px;
-            padding: 30px 20px;
             position: relative;
-        }
-
-        .carousel-arrow {
-            background: linear-gradient(145deg, var(--lumin-gray), var(--lumin-dark));
-            border: 2px solid var(--lumin-yellow);
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            color: var(--lumin-yellow);
-            font-size: 22px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(253, 253, 150, 0.1);
-            z-index: 10;
-            flex-shrink: 0;
-        }
-
-        .carousel-arrow:hover {
-            background: var(--lumin-yellow);
-            color: var(--lumin-black);
-            transform: scale(1.1);
-            box-shadow: 0 6px 30px rgba(253, 253, 150, 0.4);
-        }
-
-        .carousel-arrow:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            border-color: var(--lumin-gray-light);
-            color: var(--lumin-text-muted);
+            width: 100%;
+            padding: 10px 0;
+            overflow: visible;
         }
 
         .carousel-book-display {
-            flex: 0 0 auto;
             display: flex;
-            flex-direction: column;
+            gap: 24px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            width: 100%;
+            padding: 20px 4px;
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+            -ms-overflow-style: none;  /* Hide scrollbar for IE/Edge */
+            scroll-snap-type: x mandatory;
+        }
+
+        .carousel-book-display::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome/Safari */
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            cursor: pointer;
+            display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            z-index: 20;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0;
+        }
+
+        .carousel-container:hover .carousel-arrow {
+            opacity: 1;
+        }
+
+        .carousel-arrow:hover {
+            background: var(--foreground);
+            color: var(--background);
+            border-color: var(--foreground);
+            transform: translateY(-50%) scale(1.08);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .carousel-arrow:disabled {
+            opacity: 0 !important;
+            cursor: not-allowed;
+        }
+
+        #carousel-prev {
+            left: -24px;
+        }
+
+        #carousel-next {
+            right: -24px;
+        }
+
+        @media (max-width: 768px) {
+            .carousel-arrow {
+                display: none !important; /* Hide arrows on touch devices */
+            }
         }
 
         .carousel-counter {
-            color: var(--lumin-gold);
-            margin-top: 25px;
-            font-size: 15px;
+            color: var(--muted-foreground);
+            margin-top: 15px;
+            font-size: 13px;
             font-weight: 500;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            display: none; /* Hide as horizontal scroll makes it redundant, but keep in DOM for compatibility */
         }
 
-        /* === LIBRO 3D === */
-        .book-scene-large {
-            width: 220px;
-            height: 310px;
-            perspective: 1200px;
-            position: relative;
+        /* === PREMIUM EDITORIAL BOOK CARD === */
+        .book-card {
+            width: 200px;
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 25px;
-            box-sizing: content-box;
-            z-index: 5;
-            animation: bookFloat 4s ease-in-out infinite;
-        }
-
-        @keyframes bookFloat {
-
-            0%,
-            100% {
-                transform: translateY(0px) rotateY(0deg);
-            }
-
-            25% {
-                transform: translateY(-10px) rotateY(2deg);
-            }
-
-            50% {
-                transform: translateY(-15px) rotateY(0deg);
-            }
-
-            75% {
-                transform: translateY(-10px) rotateY(-2deg);
-            }
-        }
-
-        .book-scene-large::before {
-            content: '';
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 70%;
-            height: 30px;
-            background: radial-gradient(ellipse at center, rgba(253, 253, 150, 0.4) 0%, rgba(253, 253, 150, 0.1) 40%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(15px);
-            opacity: 0.6;
-            animation: glowPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes glowPulse {
-
-            0%,
-            100% {
-                opacity: 0.4;
-                transform: translateX(-50%) scale(1);
-            }
-
-            50% {
-                opacity: 0.8;
-                transform: translateX(-50%) scale(1.2);
-            }
-        }
-
-        .book-scene-large:hover {
-            animation: none;
-            transform: translateY(-15px);
-        }
-
-        .book-scene-large .book-object {
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-            transform: rotateY(-25deg) rotateX(5deg);
-            cursor: pointer;
-            background-color: var(--lumin-yellow);
-            box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .book-scene-large:hover .book-object {
-            transform: rotateY(0deg) rotateX(0deg) scale(1.05) translateZ(40px);
-            box-shadow: -20px 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(253, 253, 150, 0.2);
-        }
-
-        .face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 4px;
-        }
-
-        .face-front {
-            background: linear-gradient(135deg, var(--lumin-yellow) 0%, var(--lumin-yellow-soft) 100%);
-            transform: translateZ(22px);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 25px;
-            box-shadow: inset 8px 0 25px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            text-decoration: none;
+            color: var(--foreground);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            flex-shrink: 0;
+            scroll-snap-align: start;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
-        .face-back {
-            background: linear-gradient(135deg, var(--lumin-yellow) 0%, var(--lumin-yellow-soft) 100%);
-            transform: rotateY(180deg) translateZ(22px);
+        .book-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            border-color: var(--lumin-yellow-soft);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 0 20px rgba(253, 246, 227, 0.08);
         }
 
-        .face-spine {
-            width: 44px;
+        :root[data-theme="light"] .book-card:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.06);
+            border-color: #0d0d0d;
+        }
+
+        /* Shine effect */
+        .book-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            transition: all 0.8s ease;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        :root[data-theme="light"] .book-card::after {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+        }
+
+        .book-card:hover::after {
+            left: 100%;
+        }
+
+        /* Cover Container */
+        .book-card-cover-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3/4;
+            overflow: hidden;
+            background: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .book-card-cover {
+            width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, var(--lumin-yellow-pale) 0%, var(--lumin-yellow) 50%, var(--lumin-yellow-pale) 100%);
-            transform: rotateY(-90deg) translateZ(22px);
-            position: absolute;
-            left: 0;
-            box-shadow: inset -5px 0 10px rgba(0, 0, 0, 0.1);
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        .face-pages {
-            width: 40px;
-            height: 96%;
-            background: linear-gradient(90deg, #f5f5f5 0%, #ffffff 50%, #f5f5f5 100%);
-            position: absolute;
-            top: 2%;
-            right: 0;
-            transform: rotateY(90deg) translateZ(196px);
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
+        .book-card:hover .book-card-cover {
+            transform: scale(1.05);
         }
 
-        .book-title-on-cover {
-            color: var(--lumin-black);
-            font-weight: 700;
-            font-family: 'Georgia', serif;
-            font-size: 18px;
+        /* Placeholder Cover Style */
+        .book-card-cover-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--card), var(--muted));
             text-align: center;
-            line-height: 1.4;
-            word-wrap: break-word;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+            position: relative;
+        }
+
+        .book-card-cover-placeholder-inner {
+            border: 1px solid var(--border);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .book-card-placeholder-icon {
+            font-size: 28px;
+            color: var(--muted-foreground);
+            margin-bottom: 12px;
+            transition: transform 0.4s ease, color 0.4s ease;
+        }
+
+        .book-card:hover .book-card-placeholder-icon {
+            transform: scale(1.15) translateY(-2px);
+            color: var(--lumin-yellow-soft);
+        }
+
+        .book-card-placeholder-title {
+            font-family: 'Fraunces', serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--foreground);
+            line-height: 1.3;
+            max-height: 52px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Hover overlay screen */
+        .book-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: all 0.3s ease;
+            z-index: 4;
+        }
+
+        .book-card:hover .book-card-overlay {
+            opacity: 1;
+        }
+
+        .book-card-overlay-btn {
+            background: #ffffff;
+            color: #0d0d0d;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateY(8px) scale(0.9);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .book-card:hover .book-card-overlay-btn {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Progress Bar */
+        .book-card-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255,255,255,0.15);
+            z-index: 3;
+        }
+
+        .book-card-progress-fill {
+            height: 100%;
+            background: var(--lumin-yellow-soft);
+            box-shadow: 0 0 6px var(--lumin-yellow-soft);
+            transition: width 0.3s ease;
+        }
+
+        /* Info Wrap */
+        .book-card-info {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--card);
+        }
+
+        .book-card-title {
+            font-family: 'Fraunces', serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--foreground);
+            line-height: 1.3;
+            max-height: 38px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            text-align: left;
+            transition: color 0.2s ease;
+        }
+
+        .book-card:hover .book-card-title {
+            color: var(--lumin-yellow-soft);
+        }
+
+        :root[data-theme="light"] .book-card:hover .book-card-title {
+            color: #0d0d0d;
+        }
+
+        .book-card-author {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Progress Text */
+        .book-card-progress-text {
+            font-size: 11px;
+            color: var(--muted-foreground);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
         }
 
         /* === GRID DE BÚSQUEDA === */
         .books-grid {
             display: none;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 35px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
             width: 100%;
-            margin: 0 auto;
-            padding: 20px;
+            margin-top: 20px;
             justify-items: center;
-            align-content: start;
         }
 
         .books-grid.active {
             display: grid;
         }
 
-        .book-scene {
-            width: 150px;
-            height: 210px;
-            perspective: 800px;
-            margin: 0 auto;
-            transition: all 0.4s ease;
-            flex-shrink: 0;
-        }
-
-        .book-scene:hover {
-            transform: translateY(-10px);
-        }
-
-        .book-scene .book-object {
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            transition: transform 0.5s ease;
-            transform: rotateY(-20deg) rotateX(3deg);
-            cursor: pointer;
-        }
-
-        .book-scene:hover .book-object {
-            transform: rotateY(0deg) rotateX(0deg) scale(1.05);
-        }
-
-        .book-scene .face-front {
-            transform: translateZ(15px);
-            padding: 15px;
-        }
-
-        .book-scene .face-back {
-            transform: rotateY(180deg) translateZ(15px);
-        }
-
-        .book-scene .face-spine {
-            width: 30px;
-            transform: rotateY(-90deg) translateZ(15px);
-        }
-
-        .book-scene .face-pages {
-            width: 26px;
-            transform: rotateY(90deg) translateZ(132px);
-        }
-
-        .book-scene .book-title-on-cover {
-            font-size: 13px;
-        }
-
-        /* Responsive grid de búsqueda */
-        @media (max-width: 768px) {
-            .books-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 20px;
-                padding: 15px;
-            }
-            .book-scene {
-                width: 120px;
-                height: 168px;
-            }
-            .book-scene .book-title-on-cover {
-                font-size: 11px;
-            }
-            .book-scene .face-pages {
-                width: 20px;
-                transform: rotateY(90deg) translateZ(105px);
-            }
-        }
-
-        @media (max-width: 480px) {
+        @media (max-width: 640px) {
             .books-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                padding: 10px;
+                gap: 16px;
             }
-            .book-scene {
-                width: 110px;
-                height: 154px;
-            }
-            .book-scene .book-title-on-cover {
-                font-size: 10px;
-            }
-            .book-scene .face-spine {
-                width: 22px;
-            }
-            .book-scene .face-pages {
-                width: 18px;
-                transform: rotateY(90deg) translateZ(96px);
+            
+            .book-card {
+                width: 100%;
+                max-width: 180px;
             }
         }
 
@@ -1249,9 +1684,34 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            min-height: 100vh;
             width: 100%;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            box-shadow: 0 5px 40px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        :root[data-theme="light"] .viewer-content-area.scroll-mode .scroll-page-container {
+            background: rgba(0, 0, 0, 0.02);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-loading-placeholder {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--muted-foreground);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .page-loading-placeholder i {
+            font-size: 24px;
+            animation: spin 1.5s linear infinite;
         }
 
         .viewer-content-area.scroll-mode .page-number-indicator {
@@ -1265,10 +1725,12 @@
         }
 
         .viewer-content-area.scroll-mode canvas.page-canvas {
-            max-width: 95vw;
-            max-height: none;
-            width: auto;
-            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            box-shadow: none;
             margin-bottom: 0;
         }
 
@@ -3535,11 +3997,165 @@
             font-style: italic;
         }
 
+        /* === EXTRA SETTINGS PANEL SPACING & STABS === */
+        .ui-settings-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        :root[data-theme="light"] .ui-settings-tabs {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .ui-settings-tab {
+            flex: 1;
+            padding: 14px 6px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--muted-foreground);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .ui-settings-tab:hover {
+            color: var(--foreground);
+        }
+
+        .ui-settings-tab.active {
+            color: var(--lumin-yellow);
+            border-bottom-color: var(--lumin-yellow);
+        }
+
+        :root[data-theme="light"] .ui-settings-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .settings-tab-content {
+            display: none;
+            animation: fadeInTab 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .settings-tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ui-settings-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Utility classes for live UI updates */
+        .no-transitions * {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        .compact-mode .library-container {
+            padding-top: 75px;
+        }
+        
+        .compact-mode .library-hero-section {
+            margin: 15px 0 10px;
+        }
+
+        .compact-mode .library-hero-section h2 {
+            font-size: 32px;
+        }
+
+        .compact-mode .book-card {
+            width: 175px;
+        }
+
+        .compact-mode .book-card-info {
+            padding: 10px;
+        }
+
+        .compact-mode .book-card-title {
+            font-size: 13px;
+        }
+
+        .compact-mode .book-card-author {
+            font-size: 11px;
+        }
+
+        /* === LOGIN GRADIENT === */
+        @keyframes rotateGradient {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.15); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        
+        #login-section {
+            position: relative;
+            overflow: hidden !important;
+            background: #060606 !important;
+            z-index: 10;
+        }
+
+        #login-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, #4c3917 0%, #322610 25%, #1b150a 50%, #060606 100%) !important;
+            z-index: -1;
+            animation: rotateGradient 20s ease-in-out infinite !important;
+            pointer-events: none;
+        }
+
+        :root[data-theme="light"] #login-section {
+            background: #fcfaf2 !important;
+        }
+
+        :root[data-theme="light"] #login-section::before {
+            background: radial-gradient(circle at center, #ebd492 0%, #edd9a3 25%, #f5ebd2 50%, #fcfaf2 100%) !important;
+        }
+        
+        .login-container {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(253, 253, 150, 0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        :root[data-theme="light"] .login-container {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
 </style>
 <base target="_blank">
 </head>
 
 <body>
+    <!-- DECORACIONES DE FONDO PREMIUM -->
+    <div class="bg-glow-circles" id="ui-background-decorations"></div>
+    <div class="bg-grid-overlay" id="ui-grid-overlay"></div>
+
     <!-- LLUVIA DE VELAS -->
     <div id="rain-container" class="rain-strong"></div>
 
@@ -3652,13 +4268,13 @@
     </div>
 
     <!-- VISTA 1: LOGIN -->
-    <section id="login-section" class="view-section view-active" style="justify-content: center;">
+    <section id="login-section" class="view-section view-active" style="justify-content: center; align-items: center; z-index: 10;">
         <div class="login-container">
-            <h1
-                style="color: var(--lumin-yellow); margin-bottom: 10px; font-family: 'Cinzel', serif; font-size: 36px; text-shadow: 0 0 40px rgba(253, 253, 150, 0.4);">
-                BIBLIOTECA LUMIN
+            <img src="Logo.png" class="login-logo" alt="Lumin Logo">
+            <h1 style="color: var(--foreground); margin-bottom: 8px; font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em;">
+                Biblioteca Lumin
             </h1>
-            <p style="color: var(--lumin-gold-dark); margin-bottom: 35px; font-style: italic; font-size: 15px;">
+            <p style="color: var(--muted-foreground); margin-bottom: 30px; font-size: 14px; font-weight: 400; letter-spacing: 0.5px;">
                 Tu colección de novelas iluminada
             </p>
 
@@ -3674,32 +4290,65 @@
 
     <!-- VISTA 2: LIBRERÍA -->
     <section id="library-section" class="view-section">
-        <div class="library-header">
-            <h2>COLECCIÓN DE NOVELAS</h2>
-            <p id="welcome-user" style="color: var(--lumin-gold-dark); margin-bottom:15px; font-size: 14px;">Bienvenido
-            </p>
+        <!-- Sticky Premium Navbar -->
+        <header class="library-navbar">
+            <div class="navbar-brand" onclick="loadLibrary(false)">
+                <img src="Logo.png" class="navbar-logo" alt="Lumin Logo">
+                <span class="navbar-title">Lumin</span>
+            </div>
+            <div class="navbar-actions">
+                <!-- Botón Admin (solo visible si es admin) -->
+                <button class="navbar-btn btn-admin" id="admin-header-btn" style="display: none;" onclick="showAdminPanel()">
+                    <span>🕯️</span> Panel Admin
+                </button>
+                <button class="navbar-btn btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </button>
+            </div>
+        </header>
 
+        <div class="library-container">
             <!-- Banner offline -->
             <div class="offline-banner" id="offline-banner">
                 <i class="fas fa-wifi-slash"></i>
                 <span>Sin conexión — Solo libros guardados disponibles</span>
             </div>
 
-            <!-- Botón Admin (solo visible si es admin) -->
-            <!-- Botón Admin (solo visible si es admin) -->
-            <button class="admin-btn-header" id="admin-header-btn" style="display: none;" onclick="showAdminPanel()">
-                <span class="candle-icon">🕯️</span> Panel Admin
-            </button>
-            <button class="admin-btn-header" onclick="logout()" style="background: rgba(200, 50, 50, 0.4); border-color: rgba(255, 100, 100, 0.3);">
-                <i class="fas fa-sign-out-alt"></i> Salir
-            </button>
-
-            <div class="search-container">
-                <input type="text" id="site-search" class="pixel-input" placeholder="Buscar documento..."
-                    onkeyup="filterBooksDebounced()">
+            <!-- Hero Section -->
+            <div class="library-hero-section">
+                <div id="welcome-user" style="font-size: 13px; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">
+                    Bienvenido
+                </div>
+                <h2>Tu Biblioteca</h2>
+                <p>Explora tu colección de PDFs en un espacio diseñado para la lectura inmersiva.</p>
+                
+                <!-- Stats Badges -->
+                <div class="stats-badges-container">
+                    <div class="stats-badge">
+                        <span class="stats-badge-dot pulse"></span>
+                        <span id="stats-in-progress">0 en progreso</span>
+                    </div>
+                    <div class="stats-badge">
+                        <i class="fas fa-check-circle" style="color: #10B981;"></i>
+                        <span id="stats-completed">0 completados</span>
+                    </div>
+                    <div class="stats-badge">
+                        <i class="fas fa-book" style="color: var(--lumin-yellow-soft);"></i>
+                        <span id="stats-total">0 total PDFs</span>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="library-container">
+
+            <!-- Modern Search Bar -->
+            <div class="search-bar-wrapper">
+                <i class="fas fa-search search-bar-icon"></i>
+                <input type="text" id="site-search" class="search-bar-input" placeholder="Buscar por título o autor..." onkeyup="filterBooksDebounced()">
+                <button id="search-clear-btn" class="search-bar-clear" onclick="clearSearch()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Book Carousel -->
             <div id="carousel-view" class="carousel-container">
                 <button class="carousel-arrow" id="carousel-prev" onclick="navigateCarousel(-1)">
                     <i class="fas fa-chevron-left"></i>
@@ -3721,123 +4370,215 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
+                
+                <!-- Pestañas de Navegación -->
+                <div class="ui-settings-tabs">
+                    <button class="ui-settings-tab active" id="tab-btn-apariencia" onclick="switchSettingsTab('apariencia')">
+                        <i class="fas fa-magic"></i> Apariencia
+                    </button>
+                    <button class="ui-settings-tab" id="tab-btn-lectura" onclick="switchSettingsTab('lectura')">
+                        <i class="fas fa-font"></i> Lectura
+                    </button>
+                    <button class="ui-settings-tab" id="tab-btn-fondo" onclick="switchSettingsTab('fondo')">
+                        <i class="fas fa-image"></i> Fondo
+                    </button>
+                </div>
+
                 <div class="ui-settings-body">
-                    <!-- Modo Claro/Oscuro -->
-                    <div class="ui-setting-item">
-                        <label><i class="fas fa-adjust"></i> Tema</label>
-                        <div class="ui-toggle-group">
-                            <button class="ui-toggle-btn" id="theme-dark" onclick="setTheme('dark')">
-                                <i class="fas fa-moon"></i> Oscuro
-                            </button>
-                            <button class="ui-toggle-btn" id="theme-light" onclick="setTheme('light')">
-                                <i class="fas fa-sun"></i> Claro
-                            </button>
+                    <!-- PESTAÑA: APARIENCIA -->
+                    <div class="settings-tab-content active" id="settings-content-apariencia">
+                        <!-- Modo Claro/Oscuro/Sistema -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-adjust"></i> Tema</label>
+                            <div class="ui-toggle-group">
+                                <button class="ui-toggle-btn" id="theme-dark" onclick="setTheme('dark')">
+                                    <i class="fas fa-moon"></i> Oscuro
+                                </button>
+                                <button class="ui-toggle-btn" id="theme-light" onclick="setTheme('light')">
+                                    <i class="fas fa-sun"></i> Claro
+                                </button>
+                                <button class="ui-toggle-btn" id="theme-system" onclick="setTheme('system')">
+                                    <i class="fas fa-desktop"></i> Sistema
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Paleta de colores -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-fill-drip"></i> Color de Acento</label>
+                            <div class="ui-color-presets">
+                                <button class="ui-color-btn" style="background: #FDFD96;" onclick="setColorPalette('yellow')" title="Amarillo Pastel"></button>
+                                <button class="ui-color-btn" style="background: #ff6b6b;" onclick="setColorPalette('red')" title="Rojo Coral"></button>
+                                <button class="ui-color-btn" style="background: #4ecdc4;" onclick="setColorPalette('teal')" title="Turquesa"></button>
+                                <button class="ui-color-btn" style="background: #a8e6cf;" onclick="setColorPalette('mint')" title="Menta"></button>
+                                <button class="ui-color-btn" style="background: #ffd93d;" onclick="setColorPalette('gold')" title="Dorado"></button>
+                                <button class="ui-color-btn" style="background: #c7ceea;" onclick="setColorPalette('lavender')" title="Lavanda"></button>
+                            </div>
+                            <div class="ui-custom-color">
+                                <input type="color" id="custom-color-picker" class="ui-color-picker" value="#FDFD96" onchange="setCustomColor(this.value)">
+                                <span>Color personalizado</span>
+                            </div>
+                        </div>
+
+                        <!-- Efectos Visuales Toggles -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-wand-magic-sparkles"></i> Efectos Visuales</label>
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-transform:none; letter-spacing:normal; margin-bottom:0;">
+                                    <span style="color: var(--lumin-text); font-size: 13px;">Decoraciones flotantes</span>
+                                    <input type="checkbox" id="toggle-decorations" class="toggle-switch" onchange="currentUISettings.showDecorations = this.checked; applyUISettings();">
+                                </label>
+                                <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-transform:none; letter-spacing:normal; margin-bottom:0;">
+                                    <span style="color: var(--lumin-text); font-size: 13px;">Animaciones de interfaz</span>
+                                    <input type="checkbox" id="toggle-animations" class="toggle-switch" onchange="currentUISettings.animationsEnabled = this.checked; applyUISettings();">
+                                </label>
+                                <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-transform:none; letter-spacing:normal; margin-bottom:0;">
+                                    <span style="color: var(--lumin-text); font-size: 13px;">Modo compacto</span>
+                                    <input type="checkbox" id="toggle-compact" class="toggle-switch" onchange="currentUISettings.compactMode = this.checked; applyUISettings();">
+                                </label>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Fondo personalizado -->
-                    <div class="ui-setting-item">
-                        <label><i class="fas fa-image"></i> Fondo</label>
-                        <div class="ui-input-group">
-                            <input type="text" id="bg-image-input" class="ui-input" placeholder="URL de imagen o GIF...">
-                            <button class="ui-btn-small" onclick="setCustomBackground()">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            <button class="ui-btn-small secondary" onclick="clearCustomBackground()">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                    <!-- PESTAÑA: LECTURA -->
+                    <div class="settings-tab-content" id="settings-content-lectura">
+                        <!-- Tipo de letra -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-font"></i> Tipografía</label>
+                            <select id="font-select" class="ui-select" onchange="setFontFamily(this.value); currentUISettings.fontFamily = this.value; applyUISettings();">
+                                <option value="Inter, 'Segoe UI', sans-serif">Inter (Default)</option>
+                                <option value="Georgia, serif">Georgia (Serif)</option>
+                                <option value="'Courier New', monospace">Courier (Monospace)</option>
+                                <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                <option value="Verdana, sans-serif">Verdana</option>
+                            </select>
                         </div>
-                        <small style="color: var(--lumin-text-muted); font-size: 11px;">Deja vacío para fondo por defecto</small>
+
+                        <!-- Tamaño de Texto -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-text-height"></i> Tamaño de texto</label>
+                            <select id="reading-font-size" class="ui-select" onchange="currentUISettings.fontSize = this.value; applyUISettings();">
+                                <option value="small">Pequeño</option>
+                                <option value="medium" selected>Mediano</option>
+                                <option value="large">Grande</option>
+                            </select>
+                        </div>
+
+                        <!-- Espaciado de Línea -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-align-left"></i> Espaciado de líneas</label>
+                            <select id="reading-line-height" class="ui-select" onchange="currentUISettings.lineHeight = this.value; applyUISettings();">
+                                <option value="compact">Compacto</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="relaxed">Amplio</option>
+                            </select>
+                        </div>
+
+                        <!-- Oscurecimiento del Visor -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-eye-slash"></i> Oscurecimiento del visor</label>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <input type="range" id="viewer-overlay-opacity" min="0" max="85" value="0" style="flex:1; cursor:pointer;" oninput="currentUISettings.viewerOverlayOpacity = parseInt(this.value); document.getElementById('viewer-overlay-opacity-val').textContent = this.value + '%'; applyUISettings();">
+                                <span id="viewer-overlay-opacity-val" style="font-size:12px; color:var(--lumin-yellow); font-weight:600; min-width:30px;">0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Dimensiones del Documento -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-expand-arrows-alt"></i> Dimensiones del Documento</label>
+                            <div class="doc-size-presets">
+                                <button class="doc-size-btn active" id="doc-size-default" onclick="setDocumentSize('default')">
+                                    <i class="fas fa-file-alt"></i>
+                                    Por defecto
+                                </button>
+                                <button class="doc-size-btn" id="doc-size-fit-width" onclick="setDocumentSize('fit-width')">
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    Ajustar ancho
+                                </button>
+                                <button class="doc-size-btn" id="doc-size-fit-height" onclick="setDocumentSize('fit-height')">
+                                    <i class="fas fa-arrows-alt-v"></i>
+                                    Ajustar alto
+                                </button>
+                                <button class="doc-size-btn" id="doc-size-custom" onclick="setDocumentSize('custom')">
+                                    <i class="fas fa-ruler-combined"></i>
+                                    Personalizado
+                                </button>
+                            </div>
+                            <div class="doc-size-custom" id="doc-size-custom-inputs">
+                                <input type="number" id="doc-custom-width" placeholder="Ancho" min="200" max="3000" value="800">
+                                <span>×</span>
+                                <input type="number" id="doc-custom-height" placeholder="Alto" min="200" max="4000" value="1100">
+                                <span>px</span>
+                                <button class="ui-btn-small" onclick="applyCustomDocSize()">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Tipo de letra -->
-                    <div class="ui-setting-item">
-                        <label><i class="fas fa-font"></i> Fuente</label>
-                        <select id="font-select" class="ui-select" onchange="setFontFamily(this.value)">
-                            <option value="Inter, 'Segoe UI', sans-serif">Inter (Default)</option>
-                            <option value="Georgia, serif">Georgia (Serif)</option>
-                            <option value="'Courier New', monospace">Courier (Monospace)</option>
-                            <option value="'Comic Sans MS', cursive">Comic Sans</option>
-                            <option value="Arial, sans-serif">Arial</option>
-                            <option value="'Times New Roman', serif">Times New Roman</option>
-                            <option value="Verdana, sans-serif">Verdana</option>
-                        </select>
-                    </div>
+                    <!-- PESTAÑA: FONDO Y ALMACENAMIENTO -->
+                    <div class="settings-tab-content" id="settings-content-fondo">
+                        <!-- Fondo personalizado -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-image"></i> Imagen de Fondo (URL)</label>
+                            <div class="ui-input-group">
+                                <input type="text" id="bg-image-input" class="ui-input" placeholder="URL de imagen o GIF...">
+                                <button class="ui-btn-small" onclick="setCustomBackground()">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="ui-btn-small secondary" onclick="clearCustomBackground()">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Paleta de colores -->
-                    <div class="ui-setting-item">
-                        <label><i class="fas fa-fill-drip"></i> Paleta de Colores</label>
-                        <div class="ui-color-presets">
-                            <button class="ui-color-btn" style="background: #FDFD96;" onclick="setColorPalette('yellow')" title="Amarillo Pastel"></button>
-                            <button class="ui-color-btn" style="background: #ff6b6b;" onclick="setColorPalette('red')" title="Rojo Coral"></button>
-                            <button class="ui-color-btn" style="background: #4ecdc4;" onclick="setColorPalette('teal')" title="Turquesa"></button>
-                            <button class="ui-color-btn" style="background: #a8e6cf;" onclick="setColorPalette('mint')" title="Menta"></button>
-                            <button class="ui-color-btn" style="background: #ffd93d;" onclick="setColorPalette('gold')" title="Dorado"></button>
-                            <button class="ui-color-btn" style="background: #c7ceea;" onclick="setColorPalette('lavender')" title="Lavanda"></button>
+                        <!-- Subir imagen localmente -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-upload"></i> Subir Imagen Local</label>
+                            <input type="file" id="bg-local-file-input" accept="image/*" style="display:none;" onchange="handleLocalBgUpload(this)">
+                            <button class="pixel-button" onclick="document.getElementById('bg-local-file-input').click()" style="padding:10px; font-size:13px; border-radius:10px; background:rgba(253,246,227,0.08); border:1px solid var(--border); color:var(--foreground); width:auto;">
+                                <i class="fas fa-folder-open"></i> Elegir Imagen / GIF
+                            </button>
                         </div>
-                        <div class="ui-custom-color">
-                            <input type="color" id="custom-color-picker" class="ui-color-picker" value="#FDFD96" onchange="setCustomColor(this.value)">
-                            <span>Color personalizado</span>
-                        </div>
-                    </div>
 
-                    <!-- Dimensiones del Documento -->
-                    <div class="ui-setting-item">
-                        <label><i class="fas fa-expand-arrows-alt"></i> Dimensiones del Documento</label>
-                        <div class="doc-size-presets">
-                            <button class="doc-size-btn active" id="doc-size-default" onclick="setDocumentSize('default')">
-                                <i class="fas fa-file-alt"></i>
-                                Por defecto
-                            </button>
-                            <button class="doc-size-btn" id="doc-size-fit-width" onclick="setDocumentSize('fit-width')">
-                                <i class="fas fa-arrows-alt-h"></i>
-                                Ajustar ancho
-                            </button>
-                            <button class="doc-size-btn" id="doc-size-fit-height" onclick="setDocumentSize('fit-height')">
-                                <i class="fas fa-arrows-alt-v"></i>
-                                Ajustar alto
-                            </button>
-                            <button class="doc-size-btn" id="doc-size-custom" onclick="setDocumentSize('custom')">
-                                <i class="fas fa-ruler-combined"></i>
-                                Personalizado
-                            </button>
+                        <!-- Opacidad del Fondo -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-circle-half-stroke"></i> Opacidad de cobertura</label>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <input type="range" id="bg-opacity-slider" min="0" max="100" value="50" style="flex:1; cursor:pointer;" oninput="currentUISettings.backgroundOpacity = parseInt(this.value); document.getElementById('bg-opacity-val').textContent = this.value + '%'; applyUISettings();">
+                                <span id="bg-opacity-val" style="font-size:12px; color:var(--lumin-yellow); font-weight:600; min-width:30px;">50%</span>
+                            </div>
                         </div>
-                        <div class="doc-size-custom" id="doc-size-custom-inputs">
-                            <input type="number" id="doc-custom-width" placeholder="Ancho" min="200" max="3000" value="800">
-                            <span>×</span>
-                            <input type="number" id="doc-custom-height" placeholder="Alto" min="200" max="4000" value="1100">
-                            <span>px</span>
-                            <button class="ui-btn-small" onclick="applyCustomDocSize()">
-                                <i class="fas fa-check"></i>
+
+                        <hr style="border:1px solid var(--border); margin:15px 0;">
+
+                        <!-- Lectura Offline -->
+                        <div class="ui-setting-item">
+                            <label><i class="fas fa-cloud-download-alt"></i> Bóveda Offline</label>
+                            <div id="offline-summary-bar" style="font-size: 11px; margin-bottom: 10px; color: var(--lumin-yellow); display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <span>Contenido: <span id="offline-cache-stats-count">0</span></span>
+                                <span>Uso: <span id="offline-total-size-sum">0.00 MB</span></span>
+                            </div>
+                            <div class="offline-cache-list" id="offline-cache-list" style="margin-bottom: 10px; max-height: 150px; overflow-y: auto; padding: 5px; border: 1px solid rgba(253,253,150,0.1); border-radius: 8px;">
+                                <div class="offline-cache-empty">No hay novelas guardadas</div>
+                            </div>
+                            <button class="cache-clear-all" id="cache-clear-all-btn" style="display:none; margin-top:8px;" onclick="clearAllOfflineCache()">
+                                <i class="fas fa-trash-alt"></i> Vaciar bóveda offline
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Lectura Offline -->
-                    <div class="ui-setting-item">
-                        <label><i class="fas fa-cloud-download-alt"></i> Gestión de Almacenamiento Offline</label>
-                        <div id="offline-summary-bar" style="font-size: 11px; margin-bottom: 10px; color: var(--lumin-yellow); display: flex; justify-content: space-between; padding: 5px; background: rgba(0,0,0,0.3); border-radius: 8px;">
-                            <span>Contenido: <span id="offline-cache-stats-count">0</span></span>
-                            <span>Uso: <span id="offline-total-size-sum">0.00 MB</span></span>
-                        </div>
-                        <div class="offline-cache-list" id="offline-cache-list" style="margin-bottom: 10px; max-height: 150px; overflow-y: auto; padding: 5px; border: 1px solid rgba(253,253,150,0.1); border-radius: 8px;">
-                            <div class="offline-cache-empty">No hay novelas guardadas</div>
-                        </div>
-                        <button class="cache-clear-all" id="cache-clear-all-btn" style="display:none; margin-top:8px;" onclick="clearAllOfflineCache()">
-                            <i class="fas fa-trash-alt"></i> Borrar toda la bóveda offline
-                        </button>
-                        <small style="color: var(--lumin-text-muted); font-size: 10px; display:block; margin-top:8px; line-height: 1.4;">
-                            * El límite depende de tu dispositivo (usualmente >1GB). Puedes guardar decenas de novelas sin problemas.
-                        </small>
-                    </div>
-
-                    <!-- Guardar/Restablecer -->
+                <!-- Guardar/Restablecer Footer -->
+                <div class="ui-settings-footer">
                     <div class="ui-setting-actions">
                         <button class="ui-btn-save" onclick="saveUISettings()">
-                            <i class="fas fa-save"></i> Guardar Configuración
+                            <i class="fas fa-save"></i> Guardar
                         </button>
                         <button class="ui-btn-reset" onclick="resetUISettings()">
-                            <i class="fas fa-undo"></i> Restablecer
+                            <i class="fas fa-undo"></i> Reset
                         </button>
                     </div>
                 </div>
@@ -4172,6 +4913,10 @@
         let isScrollMode = false;
         let renderedPages = new Set();
         let scrollObserver = null;
+        let scrollActiveObserver = null;
+        let scrollModeInitialized = false;
+        let scrollModeScale = 0;
+        let scrollModeBookId = null;
         let _currentOperationId = 0;
         let isOpeningBook = false;
 
@@ -4389,11 +5134,8 @@
             activeView.offsetHeight;
             activeView.classList.add('view-active');
 
-            if (viewId === 'viewer-section') {
+            if (viewId === 'viewer-section' || viewId === 'login-section') {
                 toggleRain(false);
-            } else if (viewId === 'login-section') {
-                toggleRain(true);
-                document.getElementById('rain-container').className = 'rain-strong';
             } else {
                 toggleRain(true);
                 document.getElementById('rain-container').className = 'rain-subtle';
@@ -4424,6 +5166,17 @@
 
         function toggleRain(visible) {
             const container = document.getElementById('rain-container');
+            if (!container) return;
+            
+            // Si estamos en la pantalla de login o las animaciones están desactivadas, forzar oculto.
+            const isLoginActive = document.getElementById('login-section').classList.contains('view-active');
+            if (isLoginActive || currentUISettings.animationsEnabled === false) {
+                container.style.display = 'none';
+                const candles = container.querySelectorAll('.candle');
+                candles.forEach(c => c.style.animationPlayState = 'paused');
+                return;
+            }
+
             if (!visible) {
                 container.style.display = 'none';
                 const candles = container.querySelectorAll('.candle');
@@ -4609,6 +5362,109 @@
                 .getLibraryContent();
         }
 
+        function getBookColor(title) {
+            const schemes = [
+                { from: '#1e293b', to: '#0f172a', text: '#FEFDFB', iconColor: '#c0c5ce' }, // Midnight Blue
+                { from: '#3c2f2f', to: '#1e1414', text: '#FEFDFB', iconColor: '#c0c5ce' }, // Coffee Crimson
+                { from: '#162e26', to: '#0d1f1a', text: '#FEFDFB', iconColor: '#e0ebf5' }, // Forest Emerald
+                { from: '#2e1e3b', to: '#1a0f24', text: '#FEFDFB', iconColor: '#c0c5ce' }, // Royal Violet
+                { from: '#3b2a1a', to: '#24170f', text: '#FEFDFB', iconColor: '#f2e6e1' }, // Sepia Gold
+                { from: '#2a1a3b', to: '#140c24', text: '#FEFDFB', iconColor: '#f5eff2' }, // Twilight Plum
+                { from: '#3b1a1a', to: '#240c0c', text: '#FEFDFB', iconColor: '#fdf3f0' }, // Rosewood
+                { from: '#222c3c', to: '#111720', text: '#FEFDFB', iconColor: '#eef3ef' }  // Steel Blue
+            ];
+            
+            let hash = 0;
+            for (let i = 0; i < title.length; i++) {
+                hash = title.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const idx = Math.abs(hash) % schemes.length;
+            return schemes[idx];
+        }
+
+        function createBookCardElement(book) {
+            const parts = book.name.split(' - ');
+            let title = book.name;
+            let author = "Lumin VIP";
+            if (parts.length > 1) {
+                title = parts[0].trim();
+                author = parts[1].trim();
+            }
+
+            const colors = getBookColor(book.name);
+            
+            let progressPercent = 0;
+            if (currentUser) {
+                const progressPage = parseInt(localStorage.getItem(`lumin_progress_${currentUser.telegram}_${book.id}`)) || 0;
+                const totalPages = parseInt(localStorage.getItem(`lumin_total_${currentUser.telegram}_${book.id}`)) || 0;
+                if (totalPages > 0 && progressPage > 0) {
+                    progressPercent = Math.min(100, Math.round((progressPage / totalPages) * 100));
+                }
+            }
+
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            card.onclick = () => openBook((book.fileId || book.id), book.name);
+
+            card.innerHTML = `
+                <div class="book-card-cover-wrap">
+                    <div class="book-card-cover-placeholder" style="background: linear-gradient(135deg, ${colors.from}, ${colors.to});">
+                        <div class="book-card-cover-placeholder-inner" style="border-color: rgba(253, 246, 227, 0.1);">
+                            <i class="fas fa-book-open book-card-placeholder-icon" style="color: ${colors.iconColor};"></i>
+                            <div class="book-card-placeholder-title" style="color: ${colors.text};">${title}</div>
+                        </div>
+                    </div>
+                    <div class="book-card-overlay">
+                        <span class="book-card-overlay-btn">Abrir Novela</span>
+                    </div>
+                    ${progressPercent > 0 ? `
+                        <div class="book-card-progress-bar">
+                            <div class="book-card-progress-fill" style="width: ${progressPercent}%;"></div>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="book-card-info">
+                    <div class="book-card-title">${title}</div>
+                    <div class="book-card-author">${author}</div>
+                    <div class="book-card-progress-text">
+                        <i class="fas fa-book-reader" style="color: var(--lumin-yellow-soft);"></i>
+                        <span>${progressPercent > 0 ? `${progressPercent}% completado` : 'Sin empezar'}</span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function updateLibraryStats() {
+            const totalEl = document.getElementById('stats-total');
+            const inProgressEl = document.getElementById('stats-in-progress');
+            const completedEl = document.getElementById('stats-completed');
+            
+            if (!totalEl || !currentUser) return;
+            
+            let total = allBooks.length;
+            let inProgress = 0;
+            let completed = 0;
+            
+            allBooks.forEach(book => {
+                const progressPage = parseInt(localStorage.getItem(`lumin_progress_${currentUser.telegram}_${book.id}`)) || 0;
+                const totalPages = parseInt(localStorage.getItem(`lumin_total_${currentUser.telegram}_${book.id}`)) || 0;
+                
+                if (totalPages > 0 && progressPage > 0) {
+                    const percent = Math.min(100, Math.round((progressPage / totalPages) * 100));
+                    if (percent === 100) {
+                        completed++;
+                    } else {
+                        inProgress++;
+                    }
+                }
+            });
+            
+            totalEl.textContent = `${total} total PDFs`;
+            if (inProgressEl) inProgressEl.textContent = `${inProgress} en progreso`;
+            if (completedEl) completedEl.textContent = `${completed} completados`;
+        }
+
         function renderCarousel() {
             const carouselContainer = document.getElementById('carousel-view');
             const bookDisplay = document.getElementById('carousel-book-display');
@@ -4624,87 +5480,29 @@
             }
 
             carouselContainer.style.display = 'flex';
-            counter.style.display = 'block';
+            counter.style.display = 'none';
             grid.classList.remove('active');
 
             if (filteredBooks.length === 0) {
-                bookDisplay.innerHTML = '<p style="text-align:center; color: var(--lumin-gold-dark); font-size: 16px;">No hay documentos disponibles.</p>';
-                counter.textContent = '';
-                document.getElementById('carousel-prev').disabled = true;
-                document.getElementById('carousel-next').disabled = true;
+                bookDisplay.innerHTML = '<p style="text-align:center; color: var(--lumin-gold-dark); font-size: 16px; width: 100%; padding: 40px 0;">No hay novelas disponibles.</p>';
                 return;
             }
 
-            if (currentBookIndex >= filteredBooks.length) currentBookIndex = 0;
-            if (currentBookIndex < 0) currentBookIndex = filteredBooks.length - 1;
-
-            const book = filteredBooks[currentBookIndex];
-
             bookDisplay.innerHTML = '';
-            const scene = document.createElement('div');
-            scene.className = 'book-scene-large';
-
-            const bookObj = document.createElement('div');
-            bookObj.className = 'book-object';
-            bookObj.onclick = () => openBook((book.fileId || book.id), book.name);
-
-            const front = document.createElement('div');
-            front.className = 'face face-front';
-            front.innerHTML = `
-                <div class="book-title-on-cover">${book.name}</div>
-                <div style="font-size: 12px; color: var(--lumin-black); margin-top: 25px; opacity: 0.7; font-weight: 600;">${(book.size / 1024 / 1024).toFixed(2)} MB</div>
-            `;
-
-            const back = document.createElement('div');
-            back.className = 'face face-back';
-
-            const spine = document.createElement('div');
-            spine.className = 'face face-spine';
-
-            const pages = document.createElement('div');
-            pages.className = 'face face-pages';
-
-            bookObj.appendChild(front);
-            bookObj.appendChild(back);
-            bookObj.appendChild(spine);
-            bookObj.appendChild(pages);
-            scene.appendChild(bookObj);
-            bookDisplay.appendChild(scene);
-
-            counter.innerHTML = `<span style="color: var(--lumin-yellow); font-weight: bold;">${currentBookIndex + 1}</span> <span style="color: var(--lumin-gold-dark);">de</span> <span style="color: var(--lumin-yellow); font-weight: bold;">${filteredBooks.length}</span>`;
-
-            document.getElementById('carousel-prev').disabled = (filteredBooks.length <= 1);
-            document.getElementById('carousel-next').disabled = (filteredBooks.length <= 1);
-
-            scene.style.opacity = '0';
-            scene.style.transform = 'translateY(20px)';
-
-            setTimeout(() => {
-                scene.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-                scene.style.opacity = '1';
-                scene.style.transform = 'translateY(0)';
-            }, 50);
+            filteredBooks.forEach((book, idx) => {
+                const card = createBookCardElement(book);
+                bookDisplay.appendChild(card);
+            });
+            
+            updateLibraryStats();
         }
 
         function navigateCarousel(direction) {
-            if (filteredBooks.length <= 1) return;
-
             const bookDisplay = document.getElementById('carousel-book-display');
-            const currentScene = bookDisplay.querySelector('.book-scene-large');
-
-            if (currentScene) {
-                currentScene.style.transition = 'all 0.3s ease';
-                currentScene.style.opacity = '0';
-                // CORRECCIÓN: Sintaxis de string corregida aquí
-                currentScene.style.transform = direction > 0 ? 'translateX(-50px)' : 'translateX(50px)';
+            if (bookDisplay) {
+                const scrollAmount = direction * 224 * 2;
+                bookDisplay.scrollBy({ left: scrollAmount, behavior: 'smooth' });
             }
-
-            setTimeout(() => {
-                currentBookIndex += direction;
-                if (currentBookIndex >= filteredBooks.length) currentBookIndex = 0;
-                if (currentBookIndex < 0) currentBookIndex = filteredBooks.length - 1;
-                renderCarousel();
-            }, 300);
         }
 
         function renderLibrary(books) {
@@ -4717,36 +5515,11 @@
             }
 
             books.forEach(book => {
-                const scene = document.createElement('div');
-                scene.className = 'book-scene';
-
-                const bookObj = document.createElement('div');
-                bookObj.className = 'book-object';
-                bookObj.onclick = () => openBook((book.fileId || book.id), book.name);
-
-                const front = document.createElement('div');
-                front.className = 'face face-front';
-                front.innerHTML = `
-                    <div class="book-title-on-cover">${book.name}</div>
-                    <div style="font-size: 10px; color: var(--lumin-black); margin-top: auto; opacity: 0.7;">${(book.size / 1024 / 1024).toFixed(2)} MB</div>
-                `;
-
-                const back = document.createElement('div');
-                back.className = 'face face-back';
-
-                const spine = document.createElement('div');
-                spine.className = 'face face-spine';
-
-                const pages = document.createElement('div');
-                pages.className = 'face face-pages';
-
-                bookObj.appendChild(front);
-                bookObj.appendChild(back);
-                bookObj.appendChild(spine);
-                bookObj.appendChild(pages);
-                scene.appendChild(bookObj);
-                grid.appendChild(scene);
+                const card = createBookCardElement(book);
+                grid.appendChild(card);
             });
+            
+            updateLibraryStats();
         }
 
         let _searchTimeout = null;
@@ -4776,9 +5549,29 @@
             }
         }
 
+        function clearSearch() {
+            const input = document.getElementById('site-search');
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (input) input.value = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+            filteredBooks = [...allBooks];
+            currentBookIndex = 0;
+            document.getElementById('books-grid').classList.remove('active');
+            document.getElementById('carousel-view').style.display = 'flex';
+            document.getElementById('carousel-counter').style.display = 'none';
+            renderCarousel();
+        }
 
+        // Show/hide the clear (×) button dynamically based on input content
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.id === 'site-search') {
+                const clearBtn = document.getElementById('search-clear-btn');
+                if (clearBtn) clearBtn.style.display = e.target.value.length > 0 ? 'block' : 'none';
+            }
+        });
 
         // === NIVEL 3: ANTI-TAMPERING (Autodefensa - Compatible Android) ===
+
         const _guard = function() {
             try {
                 const str = _guard.toString();
@@ -4941,11 +5734,13 @@
             if (!pdfDoc) return;
             if (page >= 1 && page <= pdfDoc.numPages) {
                 pageNum = page;
-                renderPage(pageNum);
+                renderPage(pageNum, true);
                 document.querySelectorAll('.bookmark-item').forEach(item => {
                     item.classList.remove('active');
                 });
-                event.currentTarget.classList.add('active');
+                if (event && event.currentTarget) {
+                    event.currentTarget.classList.add('active');
+                }
             }
         }
 
@@ -5806,6 +6601,18 @@
             // 7. Limpiar marcadores y páginas renderizadas
             bookmarks = [];
             renderedPages.clear();
+            
+            if (scrollObserver) {
+                scrollObserver.disconnect();
+                scrollObserver = null;
+            }
+            if (scrollActiveObserver) {
+                scrollActiveObserver.disconnect();
+                scrollActiveObserver = null;
+            }
+            scrollModeInitialized = false;
+            scrollModeScale = 0;
+            scrollModeBookId = null;
 
             // 8. Limpiar viewer container
             const container = document.getElementById('viewer-container');
@@ -5924,7 +6731,9 @@
                             if (abortIfStale()) { URL.revokeObjectURL(url); return; }
 
                             pdfDoc = doc;
-                            pageNum = 1;
+                            const savedPage = parseInt(localStorage.getItem(`lumin_progress_${currentUser.telegram}_${fileId}`)) || 1;
+                            pageNum = (savedPage >= 1 && savedPage <= pdfDoc.numPages) ? savedPage : 1;
+                            
                             document.getElementById('page-count').textContent = pdfDoc.numPages;
                             document.getElementById('page-count-mobile').textContent = pdfDoc.numPages;
 
@@ -6082,58 +6891,58 @@
                     // DRM1: ocultar por defecto, se rige por permisos
                     if (dlBtn) dlBtn.style.display = 'none';
                     if (dlBtnMobile) dlBtnMobile.style.display = 'none';
-                
-                if (currentUser && currentUser.telegram && currentBookId) {
-                    // VÍA 1: Respuesta directa del servidor (getFileContentWithPerms)
-                    let hasPermission = (allowedFromServer === true);
                     
-                    // VÍA 2: Permisos precargados en el login 
-                    if (!hasPermission) {
-                        const perms = currentUser.permissions || {};
-                        hasPermission = (perms['ALL'] === true || perms[currentBookId] === true);
-                    }
-                    
-                    console.log(`[Lumin] DRM - allowedFromServer: ${allowedFromServer}, permsLocal: ${JSON.stringify(currentUser.permissions || {})}, resultado: ${hasPermission}`);
-                    
-                    // Si ya tenemos confirmación, mostrar botón inmediatamente
-                    if (hasPermission) {
-                        if (dlBtn) dlBtn.style.display = 'inline-flex';
-                        if (dlBtnMobile) dlBtnMobile.style.display = 'inline-flex';
-                        currentUser.permissions = currentUser.permissions || {};
-                        currentUser.permissions[currentBookId] = true;
-                        if (typeof showPermissionNotification === 'function') {
-                            showPermissionNotification('¡Enhorabuena! Tienes permisos especiales otorgados por un administrador para bajar esta novela. Pero te pedimos silencio, Luminita. Disfruta.');
+                    if (currentUser && currentUser.telegram && currentBookId) {
+                        // VÍA 1: Respuesta directa del servidor (getFileContentWithPerms)
+                        let hasPermission = (allowedFromServer === true);
+                        
+                        // VÍA 2: Permisos precargados en el login 
+                        if (!hasPermission) {
+                            const perms = currentUser.permissions || {};
+                            hasPermission = (perms['ALL'] === true || perms[currentBookId] === true);
                         }
-                    }
-                    
-                    // VÍA 3: Verificación asíncrona con el servidor (siempre, como seguridad)
-                    google.script.run
-                        .withSuccessHandler(function(permResult) {
-                            if (isStale()) return; // Operación cancelada
-                            if (permResult && permResult.allowed) {
-                                currentUser.permissions = currentUser.permissions || {};
-                                currentUser.permissions[currentBookId] = true;
-                                const btn = document.getElementById('download-btn');
-                                const btnM = document.getElementById('download-btn-mobile');
-                                if (btn && btn.style.display === 'none') {
-                                    btn.style.display = 'inline-flex';
-                                    if (btnM) btnM.style.display = 'inline-flex';
-                                    if (typeof showPermissionNotification === 'function') {
-                                        showPermissionNotification('¡Enhorabuena! Tienes permisos especiales otorgados por un administrador para bajar esta novela. Pero te pedimos silencio, Luminita. Disfruta.');
-                                    }
-                                }
-                            } else if (!permResult || !permResult.allowed) {
-                                if (!hasPermission) {
+                        
+                        console.log(`[Lumin] DRM - allowedFromServer: ${allowedFromServer}, permsLocal: ${JSON.stringify(currentUser.permissions || {})}, resultado: ${hasPermission}`);
+                        
+                        // Si ya tenemos confirmación, mostrar botón inmediatamente
+                        if (hasPermission) {
+                            if (dlBtn) dlBtn.style.display = 'inline-flex';
+                            if (dlBtnMobile) dlBtnMobile.style.display = 'inline-flex';
+                            currentUser.permissions = currentUser.permissions || {};
+                            currentUser.permissions[currentBookId] = true;
+                            if (typeof showPermissionNotification === 'function') {
+                                showPermissionNotification('¡Enhorabuena! Tienes permisos especiales otorgados por un administrador para bajar esta novela. Pero te pedimos silencio, Luminita. Disfruta.');
+                            }
+                        }
+                        
+                        // VÍA 3: Verificación asíncrona con el servidor (siempre, como seguridad)
+                        google.script.run
+                            .withSuccessHandler(function(permResult) {
+                                if (isStale()) return; // Operación cancelada
+                                if (permResult && permResult.allowed) {
+                                    currentUser.permissions = currentUser.permissions || {};
+                                    currentUser.permissions[currentBookId] = true;
                                     const btn = document.getElementById('download-btn');
                                     const btnM = document.getElementById('download-btn-mobile');
-                                    if (btn) btn.style.display = 'none';
-                                    if (btnM) btnM.style.display = 'none';
+                                    if (btn && btn.style.display === 'none') {
+                                        btn.style.display = 'inline-flex';
+                                        if (btnM) btnM.style.display = 'inline-flex';
+                                        if (typeof showPermissionNotification === 'function') {
+                                            showPermissionNotification('¡Enhorabuena! Tienes permisos especiales otorgados por un administrador para bajar esta novela. Pero te pedimos silencio, Luminita. Disfruta.');
+                                        }
+                                    }
+                                } else if (!permResult || !permResult.allowed) {
+                                    if (!hasPermission) {
+                                        const btn = document.getElementById('download-btn');
+                                        const btnM = document.getElementById('download-btn-mobile');
+                                        if (btn) btn.style.display = 'none';
+                                        if (btnM) btnM.style.display = 'none';
+                                    }
                                 }
-                            }
-                        })
-                        .withFailureHandler(function(e) { console.log('[Lumin] Error verificando permisos async:', e); })
-                        .checkDownloadPermission(currentUser.telegram, currentBookId);
-                }
+                            })
+                            .withFailureHandler(function(e) { console.log('[Lumin] Error verificando permisos async:', e); })
+                            .checkDownloadPermission(currentUser.telegram, currentBookId);
+                    }
                 } else {
                     // Si es DRM0 (descarga libre), mostrar la ventana de descarga
                     finalPdfBytesCache = pdfDataBytes;
@@ -6160,7 +6969,9 @@
                     return;
                 }
 
-                pageNum = 1;
+                const savedPage = parseInt(localStorage.getItem(`lumin_progress_${currentUser.telegram}_${targetFileId}`)) || 1;
+                pageNum = (savedPage >= 1 && savedPage <= pdfDoc.numPages) ? savedPage : 1;
+                
                 document.getElementById('page-count').textContent = pdfDoc.numPages;
                 document.getElementById('page-count-mobile').textContent = pdfDoc.numPages;
 
@@ -6247,17 +7058,102 @@
 
 
 
-        // === RENDERIZADO MODO PÁGINA ===
-        async function renderPage(num) {
+        // === RENDERIZADO MODO PÁGINA Y SCROLL ===
+        async function renderPage(num, smooth = false) {
             if (!pdfDoc) return;
 
             const container = document.getElementById('viewer-container');
-            container.innerHTML = '';
+
             if (isScrollMode) {
-                container.classList.add('scroll-mode');
-            } else {
-                container.classList.remove('scroll-mode');
+                if (!scrollModeInitialized || scrollModeScale !== currentScale || scrollModeBookId !== currentBookId) {
+                    scrollModeInitialized = true;
+                    scrollModeScale = currentScale;
+                    scrollModeBookId = currentBookId;
+                    renderedPages.clear();
+                    
+                    if (scrollObserver) scrollObserver.disconnect();
+                    if (scrollActiveObserver) scrollActiveObserver.disconnect();
+
+                    container.innerHTML = '';
+                    container.classList.add('scroll-mode');
+
+                    const firstPage = await pdfDoc.getPage(1);
+                    const viewport1 = firstPage.getViewport({ scale: currentScale });
+                    const width = viewport1.width;
+                    const height = viewport1.height;
+
+                    for (let i = 1; i <= pdfDoc.numPages; i++) {
+                        const pageContainer = document.createElement('div');
+                        pageContainer.className = 'scroll-page-container';
+                        pageContainer.id = 'scroll-page-' + i;
+                        pageContainer.setAttribute('data-page-number', i);
+                        pageContainer.style.aspectRatio = `${width} / ${height}`;
+                        pageContainer.style.width = '100%';
+                        pageContainer.style.maxWidth = `min(95vw, ${width}px)`;
+                        
+                        pageContainer.innerHTML = `
+                            <div class="page-loading-placeholder">
+                                <i class="fas fa-spinner"></i>
+                                <span>Página ${i} de ${pdfDoc.numPages}</span>
+                            </div>
+                        `;
+                        container.appendChild(pageContainer);
+                    }
+
+                    scrollObserver = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
+                            if (entry.isIntersecting) {
+                                if (!renderedPages.has(pageIdx)) {
+                                    renderPageInScrollMode(pageIdx, entry.target);
+                                }
+                            } else {
+                                if (renderedPages.has(pageIdx)) {
+                                    unloadPageInScrollMode(pageIdx, entry.target);
+                                }
+                            }
+                        });
+                    }, { root: container, rootMargin: '100% 0px', threshold: 0.01 });
+
+                    scrollActiveObserver = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
+                                pageNum = pageIdx;
+                                
+                                const pageInput = document.getElementById('page-input');
+                                const pageInputMobile = document.getElementById('page-input-mobile');
+                                if (pageInput && document.activeElement !== pageInput) pageInput.value = pageIdx;
+                                if (pageInputMobile && document.activeElement !== pageInputMobile) pageInputMobile.value = pageIdx;
+                                
+                                if (currentUser && currentBookId) {
+                                    localStorage.setItem(`lumin_progress_${currentUser.telegram}_${currentBookId}`, pageIdx);
+                                    localStorage.setItem(`lumin_total_${currentUser.telegram}_${currentBookId}`, pdfDoc.numPages);
+                                }
+                                
+                                if (ttsIsPanelOpen && ttsCurrentPage !== pageIdx) {
+                                    ttsCurrentPage = pageIdx;
+                                    updateTTSStatus();
+                                }
+                            }
+                        });
+                    }, { root: container, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
+
+                    container.querySelectorAll('.scroll-page-container').forEach(el => {
+                        scrollObserver.observe(el);
+                        scrollActiveObserver.observe(el);
+                    });
+                }
+
+                const targetContainer = document.getElementById('scroll-page-' + num);
+                if (targetContainer) {
+                    targetContainer.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+                }
+                return;
             }
+
+            container.classList.remove('scroll-mode');
+            container.innerHTML = '';
 
             const page = await pdfDoc.getPage(num);
             const viewport = page.getViewport({ scale: currentScale });
@@ -6281,23 +7177,69 @@
             document.getElementById('page-input').value = num;
             document.getElementById('page-input-mobile').value = num;
             
-            // Actualizar página actual en TTS si está abierto el panel
+            if (currentUser && currentBookId) {
+                localStorage.setItem(`lumin_progress_${currentUser.telegram}_${currentBookId}`, num);
+                localStorage.setItem(`lumin_total_${currentUser.telegram}_${currentBookId}`, pdfDoc.numPages);
+            }
+            
             if (ttsIsPanelOpen && ttsCurrentPage !== num) {
-                // Si el usuario cambió de página manualmente, actualizar TTS
                 ttsCurrentPage = num;
                 updateTTSStatus();
                 updateAudioFocusIndicator();
                 
-                // Si estaba reproduciendo, detener y reiniciar en nueva página
                 if (ttsIsPlaying) {
                     stopTTS();
                     setTimeout(() => startTTS(), 300);
                 } else {
-                    // Limpiar cola para que al siguiente play use la nueva página
                     ttsTextQueue = [];
                     ttsCurrentQueueIndex = 0;
                 }
             }
+        }
+
+        async function renderPageInScrollMode(num, targetElement) {
+            if (!pdfDoc || renderedPages.has(num)) return;
+            renderedPages.add(num);
+
+            try {
+                const page = await pdfDoc.getPage(num);
+                const viewport = page.getViewport({ scale: currentScale });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { alpha: false });
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                canvas.className = 'page-canvas';
+
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                if (!isScrollMode || !document.getElementById('scroll-page-' + num)) return;
+
+                await page.render({
+                    canvasContext: ctx,
+                    viewport: viewport,
+                    background: 'white'
+                }).promise;
+
+                targetElement.innerHTML = '';
+                targetElement.appendChild(canvas);
+            } catch (err) {
+                console.error(`Error rendering page ${num} in scroll mode:`, err);
+                renderedPages.delete(num);
+            }
+        }
+
+        function unloadPageInScrollMode(num, targetElement) {
+            if (!renderedPages.has(num)) return;
+            renderedPages.delete(num);
+            
+            targetElement.innerHTML = `
+                <div class="page-loading-placeholder">
+                    <i class="fas fa-spinner"></i>
+                    <span>Página ${num} de ${pdfDoc.numPages}</span>
+                </div>
+            `;
         }
 
         function changePage(delta) {
@@ -6305,7 +7247,7 @@
             const newPage = pageNum + delta;
             if (newPage >= 1 && newPage <= pdfDoc.numPages) {
                 pageNum = newPage;
-                renderPage(pageNum);
+                renderPage(pageNum, true);
                 renderBookmarkList();
             }
         }
@@ -6315,7 +7257,7 @@
             const p = parseInt(val);
             if (p >= 1 && p <= pdfDoc.numPages) {
                 pageNum = p;
-                renderPage(pageNum);
+                renderPage(pageNum, true);
                 renderBookmarkList();
             } else {
                 document.getElementById('page-input').value = pageNum;
@@ -6702,11 +7644,15 @@
 
         // Aplicar configuración guardada
         function applyUISettings() {
-            // Aplicar tema
-            document.documentElement.setAttribute('data-theme', currentUISettings.theme);
+            // 1. Aplicar tema
+            let themeToApply = currentUISettings.theme || 'dark';
+            if (themeToApply === 'system') {
+                themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', themeToApply);
             updateThemeButtons();
-
-            // Aplicar fondo
+            
+            // 2. Aplicar fondo personalizado
             if (currentUISettings.backgroundImage) {
                 document.body.classList.add('custom-bg');
                 document.body.style.backgroundImage = `url('${currentUISettings.backgroundImage}')`;
@@ -6714,16 +7660,87 @@
                 document.body.classList.remove('custom-bg');
                 document.body.style.backgroundImage = '';
             }
-
-            // Aplicar fuente
-            document.body.style.fontFamily = currentUISettings.fontFamily;
-            document.getElementById('font-select').value = currentUISettings.fontFamily;
-
-            // Aplicar paleta de colores
-            applyColorPalette(currentUISettings.colorPalette, currentUISettings.accentColor);
+            
+            // 3. Opacidad del fondo
+            let bgOverlay = document.getElementById('ui-bg-overlay');
+            if (!bgOverlay) {
+                bgOverlay = document.createElement('div');
+                bgOverlay.id = 'ui-bg-overlay';
+                bgOverlay.style.cssText = 'position:fixed; inset:0; background:var(--background); z-index:-1; pointer-events:none; transition:opacity 0.3s, background-color 0.3s;';
+                document.body.appendChild(bgOverlay);
+            }
+            if (currentUISettings.backgroundImage) {
+                const opacityVal = 1 - ((currentUISettings.backgroundOpacity !== undefined ? currentUISettings.backgroundOpacity : 50) / 100);
+                bgOverlay.style.opacity = opacityVal;
+            } else {
+                bgOverlay.style.opacity = 0;
+            }
+            
+            // 4. Aplicar fuente
+            document.body.style.fontFamily = currentUISettings.fontFamily || "Inter, 'Segoe UI', sans-serif";
+            const fontSelect = document.getElementById('font-select');
+            if (fontSelect) fontSelect.value = currentUISettings.fontFamily || "Inter, 'Segoe UI', sans-serif";
+            
+            // 5. Aplicar paleta de colores
+            applyColorPalette(currentUISettings.colorPalette || 'yellow', currentUISettings.accentColor || '#FDFD96');
             updateColorButtons();
-
-            // Aplicar dimensiones del documento
+            
+            // 6. Decoraciones de fondo
+            const dec = document.getElementById('ui-background-decorations');
+            if (dec) {
+                dec.style.display = currentUISettings.showDecorations !== false ? 'block' : 'none';
+            }
+            const gridOverlay = document.getElementById('ui-grid-overlay');
+            if (gridOverlay) {
+                gridOverlay.style.display = currentUISettings.showDecorations !== false ? 'block' : 'none';
+            }
+            
+            // 7. Animaciones
+            if (currentUISettings.animationsEnabled === false) {
+                document.body.classList.add('no-transitions');
+                const rain = document.getElementById('rain-container');
+                if (rain) rain.style.display = 'none';
+            } else {
+                document.body.classList.remove('no-transitions');
+                const rain = document.getElementById('rain-container');
+                if (rain) {
+                    if (document.getElementById('library-section').classList.contains('view-active')) {
+                        rain.style.display = 'block';
+                    } else {
+                        rain.style.display = 'none';
+                    }
+                }
+            }
+            
+            // 8. Modo compacto
+            if (currentUISettings.compactMode === true) {
+                document.body.classList.add('compact-mode');
+            } else {
+                document.body.classList.remove('compact-mode');
+            }
+            
+            // 9. Parámetros de lectura (Font Size y Line Height)
+            const textPreview = document.getElementById('audio-text-content');
+            if (textPreview) {
+                const sizeVal = currentUISettings.fontSize === 'small' ? '12px' : (currentUISettings.fontSize === 'large' ? '18px' : '15px');
+                textPreview.style.fontSize = sizeVal;
+                
+                const heightVal = currentUISettings.lineHeight === 'compact' ? '1.3' : (currentUISettings.lineHeight === 'relaxed' ? '1.8' : '1.5');
+                textPreview.style.lineHeight = heightVal;
+            }
+            
+            // 10. Oscurecimiento del visor
+            let overlay = document.getElementById('viewer-darkness-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'viewer-darkness-overlay';
+                overlay.style.cssText = 'position:fixed; inset:0; background:black; pointer-events:none; z-index:49; opacity:0; transition:opacity 0.3s;';
+                const viewerSec = document.getElementById('viewer-section');
+                if (viewerSec) viewerSec.appendChild(overlay);
+            }
+            overlay.style.opacity = (currentUISettings.viewerOverlayOpacity || 0) / 100;
+            
+            // 11. Dimensiones del documento
             if (currentUISettings.docSizeMode) {
                 document.querySelectorAll('.doc-size-btn').forEach(btn => btn.classList.remove('active'));
                 const activeBtn = document.getElementById('doc-size-' + currentUISettings.docSizeMode);
@@ -6753,13 +7770,18 @@
         function updateThemeButtons() {
             const darkBtn = document.getElementById('theme-dark');
             const lightBtn = document.getElementById('theme-light');
+            const systemBtn = document.getElementById('theme-system');
             if (darkBtn && lightBtn) {
+                darkBtn.classList.remove('active');
+                lightBtn.classList.remove('active');
+                if (systemBtn) systemBtn.classList.remove('active');
+                
                 if (currentUISettings.theme === 'dark') {
                     darkBtn.classList.add('active');
-                    lightBtn.classList.remove('active');
-                } else {
-                    darkBtn.classList.remove('active');
+                } else if (currentUISettings.theme === 'light') {
                     lightBtn.classList.add('active');
+                } else if (currentUISettings.theme === 'system') {
+                    if (systemBtn) systemBtn.classList.add('active');
                 }
             }
         }
@@ -6769,7 +7791,6 @@
             document.querySelectorAll('.ui-color-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            // Marcar el botón correspondiente
             const activeBtn = document.querySelector(`[onclick="setColorPalette('${currentUISettings.colorPalette}')"]`);
             if (activeBtn) activeBtn.classList.add('active');
         }
@@ -6779,12 +7800,31 @@
             const panel = document.getElementById('ui-settings-panel');
             if (panel.style.display === 'none' || !panel.style.display) {
                 panel.style.display = 'block';
+                
                 // Cargar valores actuales en los inputs
-                document.getElementById('bg-image-input').value = currentUISettings.backgroundImage || '';
-                document.getElementById('custom-color-picker').value = currentUISettings.accentColor;
+                document.getElementById('bg-image-input').value = currentUISettings.backgroundImage ? (currentUISettings.backgroundImage.startsWith('data:') ? 'Imagen local' : currentUISettings.backgroundImage) : '';
+                document.getElementById('custom-color-picker').value = currentUISettings.accentColor || '#FDFD96';
+                
+                // Set checkboxes
+                document.getElementById('toggle-decorations').checked = currentUISettings.showDecorations !== false;
+                document.getElementById('toggle-animations').checked = currentUISettings.animationsEnabled !== false;
+                document.getElementById('toggle-compact').checked = currentUISettings.compactMode === true;
+                
+                // Set font selectors
+                document.getElementById('font-select').value = currentUISettings.fontFamily || "Inter, 'Segoe UI', sans-serif";
+                document.getElementById('reading-font-size').value = currentUISettings.fontSize || "medium";
+                document.getElementById('reading-line-height').value = currentUISettings.lineHeight || "normal";
+                
+                // Set ranges
+                document.getElementById('viewer-overlay-opacity').value = currentUISettings.viewerOverlayOpacity || 0;
+                document.getElementById('viewer-overlay-opacity-val').textContent = (currentUISettings.viewerOverlayOpacity || 0) + '%';
+                
+                document.getElementById('bg-opacity-slider').value = currentUISettings.backgroundOpacity !== undefined ? currentUISettings.backgroundOpacity : 50;
+                document.getElementById('bg-opacity-val').textContent = (currentUISettings.backgroundOpacity !== undefined ? currentUISettings.backgroundOpacity : 50) + '%';
+                
                 updateThemeButtons();
                 updateColorButtons();
-                if(typeof renderOfflineCacheStats === 'function') renderOfflineCacheStats();
+                if (typeof renderOfflineCacheStats === 'function') renderOfflineCacheStats();
             } else {
                 panel.style.display = 'none';
             }
@@ -6793,20 +7833,17 @@
         // Establecer tema
         function setTheme(theme) {
             currentUISettings.theme = theme;
-            document.documentElement.setAttribute('data-theme', theme);
-            updateThemeButtons();
+            applyUISettings();
         }
 
         // Establecer fondo personalizado
         function setCustomBackground() {
             const url = document.getElementById('bg-image-input').value.trim();
             if (url) {
-                // Validar que es una URL válida
                 const img = new Image();
                 img.onload = function() {
                     currentUISettings.backgroundImage = url;
-                    document.body.classList.add('custom-bg');
-                    document.body.style.backgroundImage = `url('${url}')`;
+                    applyUISettings();
                     showBookmarkNotification('Fondo aplicado ✓');
                 };
                 img.onerror = function() {
@@ -6819,16 +7856,15 @@
         // Limpiar fondo personalizado
         function clearCustomBackground() {
             currentUISettings.backgroundImage = '';
-            document.body.classList.remove('custom-bg');
-            document.body.style.backgroundImage = '';
             document.getElementById('bg-image-input').value = '';
+            applyUISettings();
             showBookmarkNotification('Fondo restablecido');
         }
 
         // Establecer fuente
         function setFontFamily(font) {
             currentUISettings.fontFamily = font;
-            document.body.style.fontFamily = font;
+            applyUISettings();
         }
 
         // Establecer paleta de colores
@@ -6853,7 +7889,6 @@
                 root.style.setProperty('--lumin-yellow-pale', palette.pale);
                 root.style.setProperty('--lumin-gold', palette.gold);
             } else if (customColor) {
-                // Para colores personalizados, generar variantes
                 root.style.setProperty('--lumin-yellow', customColor);
                 root.style.setProperty('--lumin-yellow-soft', adjustBrightness(customColor, 20));
                 root.style.setProperty('--lumin-yellow-pale', adjustBrightness(customColor, 40));
@@ -6889,12 +7924,18 @@
                 colorPalette: 'yellow',
                 docSizeMode: 'default',
                 docCustomWidth: 800,
-                docCustomHeight: 1100
+                docCustomHeight: 1100,
+                showDecorations: true,
+                animationsEnabled: true,
+                compactMode: false,
+                fontSize: 'medium',
+                lineHeight: 'normal',
+                viewerOverlayOpacity: 0,
+                backgroundOpacity: 50
             };
             applyUISettings();
             localStorage.removeItem('luminUISettings');
 
-            // Si el usuario está logueado, también limpiar en el servidor
             if (currentUser && currentUser.telegram) {
                 google.script.run
                     .withSuccessHandler(function() {
@@ -6909,11 +7950,74 @@
                 showBookmarkNotification('Configuración restablecida');
             }
 
-            // Limpiar inputs
             document.getElementById('bg-image-input').value = '';
             document.getElementById('font-select').value = currentUISettings.fontFamily;
             document.getElementById('custom-color-picker').value = currentUISettings.accentColor;
         }
+
+        function switchSettingsTab(tab) {
+            document.querySelectorAll('.ui-settings-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.settings-tab-content').forEach(section => section.classList.remove('active'));
+            
+            const tabBtn = document.getElementById('tab-btn-' + tab);
+            const tabContent = document.getElementById('settings-content-' + tab);
+            
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabContent) tabContent.classList.add('active');
+        }
+
+        function handleLocalBgUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const maxDim = 1200;
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        if (compressedDataUrl.length > 300 * 1024) {
+                            const smallerCanvas = document.createElement('canvas');
+                            smallerCanvas.width = Math.round(w * 0.7);
+                            smallerCanvas.height = Math.round(h * 0.7);
+                            const sCtx = smallerCanvas.getContext('2d');
+                            sCtx.drawImage(canvas, 0, 0, smallerCanvas.width, smallerCanvas.height);
+                            currentUISettings.backgroundImage = smallerCanvas.toDataURL('image/jpeg', 0.6);
+                        } else {
+                            currentUISettings.backgroundImage = compressedDataUrl;
+                        }
+                        
+                        document.getElementById('bg-image-input').value = 'Imagen local';
+                        applyUISettings();
+                        showBookmarkNotification("Fondo local cargado ✓");
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (currentUISettings.theme === 'system') {
+                applyUISettings();
+            }
+        });
 
         // Cierre de panel UI y loadUISettings se manejan desde los handlers unificados
 
