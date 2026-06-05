@@ -7253,14 +7253,16 @@
             const container = document.getElementById('viewer-container');
 
             if (isScrollMode) {
+                // --- INICIALIZACIÓN DEL MODO SCROLL ---
                 if (!scrollModeInitialized || scrollModeScale !== currentScale || scrollModeBookId !== currentBookId) {
                     scrollModeInitialized = true;
                     scrollModeScale = currentScale;
                     scrollModeBookId = currentBookId;
                     renderedPages.clear();
+                    isProgrammaticScroll = true;
                     
-                    if (scrollObserver) scrollObserver.disconnect();
-                    if (scrollActiveObserver) scrollActiveObserver.disconnect();
+                    if (scrollObserver) { scrollObserver.disconnect(); scrollObserver = null; }
+                    if (scrollActiveObserver) { scrollActiveObserver.disconnect(); scrollActiveObserver = null; }
 
                     container.innerHTML = '';
                     container.classList.add('scroll-mode');
@@ -7288,10 +7290,21 @@
                         container.appendChild(pageContainer);
                     }
 
+                    // Desplazar PRIMERO al destino antes de activar observadores
+                    const initTarget = document.getElementById('scroll-page-' + num);
+                    if (initTarget) {
+                        initTarget.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    }
+
+                    // Forzar renderizado de la página destino inmediatamente
+                    if (initTarget && !renderedPages.has(num)) {
+                        renderPageInScrollMode(num, initTarget);
+                    }
+
+                    // Crear observadores con root: container (el elemento scrolleable real)
                     scrollObserver = new IntersectionObserver((entries) => {
                         if (isProgrammaticScroll) return;
                         entries.forEach(entry => {
-                            if (entry.boundingClientRect.height === 0) return;
                             const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
                             if (entry.isIntersecting) {
                                 if (!renderedPages.has(pageIdx)) {
@@ -7303,12 +7316,11 @@
                                 }
                             }
                         });
-                    }, { root: null, rootMargin: '100% 0px', threshold: 0.01 });
+                    }, { root: container, rootMargin: '200% 0px', threshold: 0.01 });
 
                     scrollActiveObserver = new IntersectionObserver((entries) => {
                         if (isProgrammaticScroll) return;
                         entries.forEach(entry => {
-                            if (entry.boundingClientRect.height === 0) return;
                             if (entry.isIntersecting) {
                                 const pageIdx = parseInt(entry.target.getAttribute('data-page-number'));
                                 pageNum = pageIdx;
@@ -7338,29 +7350,50 @@
                                 }
                             }
                         });
-                    }, { root: null, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
+                    }, { root: container, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
 
-                    setTimeout(() => {
-                        if (!isScrollMode) return;
-                        container.querySelectorAll('.scroll-page-container').forEach(el => {
-                            if (scrollObserver) scrollObserver.observe(el);
-                            if (scrollActiveObserver) scrollActiveObserver.observe(el);
+                    // Activar observadores DESPUÉS de que el layout y scroll estén estables
+                    // Usamos doble requestAnimationFrame para garantizar que el layout se completó
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            if (!isScrollMode) return;
+                            container.querySelectorAll('.scroll-page-container').forEach(el => {
+                                if (scrollObserver) scrollObserver.observe(el);
+                                if (scrollActiveObserver) scrollActiveObserver.observe(el);
+                            });
+                            // Desbloquear observadores después de que se estabilicen
+                            setTimeout(() => { isProgrammaticScroll = false; }, 100);
                         });
-                    }, 150);
+                    });
+
+                    return; // Ya hicimos el scroll y render dentro del bloque de init
                 }
 
+                // --- NAVEGACIÓN DENTRO DEL MODO SCROLL (ya inicializado) ---
                 isProgrammaticScroll = true;
                 const targetContainer = document.getElementById('scroll-page-' + num);
                 if (targetContainer) {
-                    targetContainer.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    targetContainer.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
                     if (!renderedPages.has(num)) {
                         renderPageInScrollMode(num, targetContainer);
                     }
                 }
                 setTimeout(() => {
                     isProgrammaticScroll = false;
-                }, 200);
+                }, 300);
                 return;
+            }
+
+            // === MODO PÁGINA (no scroll) ===
+            // Limpiar estado de scroll mode al salir
+            if (scrollModeInitialized) {
+                scrollModeInitialized = false;
+                scrollModeScale = 0;
+                scrollModeBookId = null;
+                renderedPages.clear();
+                isProgrammaticScroll = false;
+                if (scrollObserver) { scrollObserver.disconnect(); scrollObserver = null; }
+                if (scrollActiveObserver) { scrollActiveObserver.disconnect(); scrollActiveObserver = null; }
             }
 
             container.classList.remove('scroll-mode');
