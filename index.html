@@ -7335,10 +7335,13 @@
                         });
                     }, { root: null, rootMargin: '-20% 0px -20% 0px', threshold: 0.3 });
 
-                    container.querySelectorAll('.scroll-page-container').forEach(el => {
-                        scrollObserver.observe(el);
-                        scrollActiveObserver.observe(el);
-                    });
+                    setTimeout(() => {
+                        if (!isScrollMode) return;
+                        container.querySelectorAll('.scroll-page-container').forEach(el => {
+                            if (scrollObserver) scrollObserver.observe(el);
+                            if (scrollActiveObserver) scrollActiveObserver.observe(el);
+                        });
+                    }, 150);
                 }
 
                 const targetContainer = document.getElementById('scroll-page-' + num);
