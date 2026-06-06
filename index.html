@@ -1655,9 +1655,8 @@
             flex: 1;
             overflow: auto;
             position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            display: block;
+            text-align: center;
             padding: 30px;
             padding-top: 100px;
             background: var(--lumin-black);
@@ -1672,11 +1671,10 @@
 
         /* === MODO SCROLL === */
         .viewer-content-area.scroll-mode {
-            flex-direction: column;
-            align-items: center;
+            display: block;
+            text-align: center;
             padding: 30px 20px;
             padding-top: 100px;
-            gap: 20px;
         }
 
         .viewer-content-area.scroll-mode .scroll-page-container {
@@ -1853,7 +1851,8 @@
             transition: all 0.3s ease;
             max-width: 95vw;
             max-height: none;
-            display: block;
+            display: inline-block;
+            vertical-align: top;
             margin: 0 auto;
         }
 
@@ -7358,6 +7357,13 @@
                 canvas.style.width = `${viewport.width}px`;
                 canvas.style.height = `${viewport.height}px`;
                 
+                if (currentScale === 1.5) {
+                    canvas.style.maxWidth = 'min(95vw, 850px)';
+                    canvas.style.height = 'auto';
+                } else {
+                    canvas.style.maxWidth = 'none';
+                }
+                
                 // Determinar dirección de animación vertical
                 let animClass = 'page-canvas';
                 if (num > lastPageNum) {
@@ -7456,6 +7462,14 @@
             canvas.height = viewport.height * dpr;
             canvas.style.width = `${viewport.width}px`;
             canvas.style.height = `${viewport.height}px`;
+            
+            if (currentScale === 1.5) {
+                canvas.style.maxWidth = 'min(95vw, 850px)';
+                canvas.style.height = 'auto';
+            } else {
+                canvas.style.maxWidth = 'none';
+            }
+            
             canvas.className = 'page-canvas page-flip-animation';
 
             ctx.imageSmoothingEnabled = true;
