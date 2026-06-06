@@ -1655,8 +1655,9 @@
             flex: 1;
             overflow: auto;
             position: relative;
-            display: block;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 30px;
             padding-top: 100px;
             background: var(--lumin-black);
@@ -1857,6 +1858,14 @@
         }
 
         @media (min-width: 1025px) {
+            .viewer-content-area {
+                display: block;
+                text-align: center;
+            }
+            .viewer-content-area.scroll-mode {
+                display: block;
+                text-align: center;
+            }
             canvas.page-canvas {
                 max-width: none;
                 max-height: none;
@@ -2638,16 +2647,25 @@
             .viewer-content-area {
                 padding: 20px;
                 padding-top: 90px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             .viewer-content-area.scroll-mode {
                 padding: 20px 15px;
                 padding-top: 90px;
+                display: block;
+                text-align: center;
+            }
+
+            .viewer-content-area.scroll-mode canvas.page-canvas {
+                max-height: none !important;
             }
 
             canvas.page-canvas {
                 max-width: 95vw;
-                max-height: 80vh;
+                max-height: 75vh;
             }
 
             .side-nav {
