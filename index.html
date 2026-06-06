@@ -1725,12 +1725,9 @@
         }
 
         .viewer-content-area.scroll-mode canvas.page-canvas {
-            max-width: 100%;
-            max-height: 100%;
-            width: 100%;
-            height: 100%;
             border-radius: 8px;
             box-shadow: none;
+            max-width: 95vw;
         }
 
         /* === SCROLL NAVIGATOR CAPSULE === */
@@ -1841,21 +1838,30 @@
             padding-top: 20px;
         }
 
-        .viewer-header.hidden~.viewer-content-area canvas.page-canvas,
-        .viewer-section.fullscreen .viewer-content-area canvas.page-canvas {
-            max-width: 92vw;
-            max-height: 85vh;
+        @media (max-width: 1024px) {
+            .viewer-header.hidden~.viewer-content-area canvas.page-canvas,
+            .viewer-section.fullscreen .viewer-content-area canvas.page-canvas {
+                max-width: 92vw;
+                max-height: 85vh;
+            }
         }
 
         /* === CANVAS DE ALTA CALIDAD === */
         canvas.page-canvas {
-            max-width: 92vw;
-            max-height: 85vh;
             box-shadow: 0 5px 40px rgba(0, 0, 0, 0.6);
             border-radius: 4px;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
             transition: all 0.3s ease;
+            max-width: 95vw;
+            max-height: none;
+            display: block;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 1025px) {
+            canvas.page-canvas {
+                max-width: none;
+                max-height: none;
+            }
         }
 
         /* === NAVEGACIÓN VERTICAL (MODO SCROLL SINGLE-PAGE) === */
@@ -2638,10 +2644,6 @@
             .viewer-content-area.scroll-mode {
                 padding: 20px 15px;
                 padding-top: 90px;
-            }
-
-            .viewer-content-area.scroll-mode canvas.page-canvas {
-                max-width: 90vw;
             }
 
             canvas.page-canvas {
@@ -7350,8 +7352,11 @@
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d', { alpha: false });
 
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = viewport.width * dpr;
+                canvas.height = viewport.height * dpr;
+                canvas.style.width = `${viewport.width}px`;
+                canvas.style.height = `${viewport.height}px`;
                 
                 // Determinar dirección de animación vertical
                 let animClass = 'page-canvas';
@@ -7370,6 +7375,7 @@
                 await page.render({
                     canvasContext: ctx,
                     viewport: viewport,
+                    transform: [dpr, 0, 0, dpr, 0, 0],
                     background: 'white'
                 }).promise;
 
@@ -7380,6 +7386,7 @@
                         const pageViewport = page.getViewport({ scale: currentScale });
                         
                         ctx.save();
+                        ctx.scale(dpr, dpr);
                         ctx.fillStyle = 'rgba(253, 253, 150, 0.45)';
                         ctx.strokeStyle = 'rgba(253, 253, 150, 0.85)';
                         ctx.lineWidth = 1.5;
@@ -7444,8 +7451,11 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d', { alpha: false });
 
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = viewport.width * dpr;
+            canvas.height = viewport.height * dpr;
+            canvas.style.width = `${viewport.width}px`;
+            canvas.style.height = `${viewport.height}px`;
             canvas.className = 'page-canvas page-flip-animation';
 
             ctx.imageSmoothingEnabled = true;
@@ -7454,6 +7464,7 @@
             await page.render({
                 canvasContext: ctx,
                 viewport: viewport,
+                transform: [dpr, 0, 0, dpr, 0, 0],
                 background: 'white'
             }).promise;
 
@@ -7464,6 +7475,7 @@
                     const pageViewport = page.getViewport({ scale: currentScale });
                     
                     ctx.save();
+                    ctx.scale(dpr, dpr);
                     ctx.fillStyle = 'rgba(253, 253, 150, 0.45)';
                     ctx.strokeStyle = 'rgba(253, 253, 150, 0.85)';
                     ctx.lineWidth = 1.5;
