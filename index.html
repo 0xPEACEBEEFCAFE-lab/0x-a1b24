@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Biblioteca Lumin</title>
     <!-- PDF.js y PDF-Lib para manejar los documentos -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -5454,23 +5455,122 @@
             // 6. Estadísticas de caché offline
             setTimeout(renderOfflineCacheStats, 1000);
 
-            // 7. Restaurar sesión guardada
-            const savedSession = localStorage.getItem('lumin_user_session');
-            if (savedSession) {
-                try {
-                    currentUser = JSON.parse(savedSession);
-                    document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
-                    
-                    const adminBtn = document.getElementById('admin-header-btn');
-                    if (adminBtn) {
-                        adminBtn.style.display = currentUser.isAdmin ? 'inline-flex' : 'none';
+            // NUEVO: Validar Token de enlace (fuera de Telegram)
+            const urlParams = new URLSearchParams(window.location.search);
+            const offlineToken = urlParams.get('token');
+            const bookId = urlParams.get('bookId');
+            const bookName = urlParams.get('bookName');
+
+            if (offlineToken) {
+                showLoader("Validando acceso seguro...");
+                google.script.run
+                    .withSuccessHandler(response => {
+                        hideLoader();
+                        if (response.isValid) {
+                            currentUser = {
+                                telegram: response.telegram,
+                                isAdmin: response.isAdmin || false,
+                                sessionToken: response.sessionToken
+                            };
+                            localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
+                            document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
+                            
+                            const adminBtn = document.getElementById('admin-header-btn');
+                            if (adminBtn) {
+                                adminBtn.style.display = currentUser.isAdmin ? 'inline-flex' : 'none';
+                            }
+                            
+                            loadLibrary();
+                            switchView('library-section');
+                            
+                            if (bookId) {
+                                openBook(bookId, bookName || "Novela");
+                            }
+                            
+                            // Limpiar URL para no dejar el token visible si recargan (opcional)
+                            if(window.history && window.history.replaceState) {
+                                window.history.replaceState({}, document.title, window.location.pathname + (bookId ? "?bookId="+bookId : ""));
+                            }
+                        } else {
+                            document.getElementById('login-error').textContent = response.error || "Token inválido o expirado.";
+                            switchView('login-section');
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        hideLoader();
+                        document.getElementById('login-error').textContent = "Error de conexión: " + err;
+                        switchView('login-section');
+                    })
+                    .validateOfflineToken(offlineToken);
+                return;
+            }
+
+            // 7. Autenticación automática de Telegram WebApp u Offline Cache
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+                const initData = window.Telegram.WebApp.initData;
+                showLoader("Autenticando con Telegram VIP...");
+                
+                try { window.Telegram.WebApp.expand(); } catch(e) {}
+
+                google.script.run
+                    .withSuccessHandler(response => {
+                        hideLoader();
+                        if (response.isValid) {
+                            currentUser = response;
+                            localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
+                            document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
+                            
+                            const adminBtn = document.getElementById('admin-header-btn');
+                            if (adminBtn) {
+                                adminBtn.style.display = currentUser.isAdmin ? 'inline-flex' : 'none';
+                            }
+                            
+                            loadLibrary();
+                            switchView('library-section');
+                            
+                            // Abrir libro directamente si viene en la URL
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const bookId = urlParams.get('bookId');
+                            const bookName = urlParams.get('bookName');
+                            if (bookId) {
+                                openBook(bookId, bookName || "Novela");
+                            }
+                        } else {
+                            document.getElementById('login-error').textContent = response.error || "No estás registrado en la base de datos VIP.";
+                            switchView('login-section');
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        hideLoader();
+                        document.getElementById('login-error').textContent = "Error de conexión: " + err;
+                        switchView('login-section');
+                    })
+                    .validateViaTelegramWebApp(initData);
+            } else {
+                const savedSession = localStorage.getItem('lumin_user_session');
+                if (savedSession) {
+                    try {
+                        currentUser = JSON.parse(savedSession);
+                        document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
+                        
+                        const adminBtn = document.getElementById('admin-header-btn');
+                        if (adminBtn) {
+                            adminBtn.style.display = currentUser.isAdmin ? 'inline-flex' : 'none';
+                        }
+                        
+                        console.log("[Lumin PWA] Sesión restaurada, saltando login...");
+                        switchView('library-section');
+                        loadLibrary();
+                        
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const bookId = urlParams.get('bookId');
+                        const bookName = urlParams.get('bookName');
+                        if (bookId) {
+                            openBook(bookId, bookName || "Novela");
+                        }
+                    } catch(e) {
+                        console.error("Error restaurando sesión:", e);
                     }
-                    
-                    console.log("[Lumin PWA] Sesión restaurada, saltando login...");
-                    switchView('library-section');
-                    loadLibrary();
-                } catch(e) {
-                    console.error("Error restaurando sesión:", e);
                 }
             }
         });
