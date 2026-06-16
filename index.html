@@ -5456,12 +5456,12 @@
             setTimeout(renderOfflineCacheStats, 1000);
 
             // NUEVO: Validar Token de enlace (fuera de Telegram)
-            const urlParams = new URLSearchParams(window.location.search);
-            const offlineToken = urlParams.get('token');
-            const bookId = urlParams.get('bookId');
-            const bookName = urlParams.get('bookName');
+            const initUrlParams = new URLSearchParams(window.location.search);
+            const initOfflineToken = initUrlParams.get('token');
+            const initBookId = initUrlParams.get('bookId');
+            const initBookName = initUrlParams.get('bookName');
 
-            if (offlineToken) {
+            if (initOfflineToken) {
                 showLoader("Validando acceso seguro...");
                 google.script.run
                     .withSuccessHandler(response => {
@@ -5483,13 +5483,13 @@
                             loadLibrary();
                             switchView('library-section');
                             
-                            if (bookId) {
-                                openBook(bookId, bookName || "Novela");
+                            if (initBookId) {
+                                openBook(initBookId, initBookName || "Novela");
                             }
                             
                             // Limpiar URL para no dejar el token visible si recargan (opcional)
                             if(window.history && window.history.replaceState) {
-                                window.history.replaceState({}, document.title, window.location.pathname + (bookId ? "?bookId="+bookId : ""));
+                                window.history.replaceState({}, document.title, window.location.pathname + (initBookId ? "?bookId="+initBookId : ""));
                             }
                         } else {
                             document.getElementById('login-error').textContent = response.error || "Token inválido o expirado.";
@@ -5501,7 +5501,7 @@
                         document.getElementById('login-error').textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
-                    .validateOfflineToken(offlineToken);
+                    .validateOfflineToken(initOfflineToken);
                 return;
             }
 
