@@ -5428,6 +5428,30 @@
             const errorEl = document.getElementById('login-error');
 
             if (initOfflineToken) {
+                // Si estamos offline y tenemos una sesión guardada localmente, usarla directamente
+                if (!navigator.onLine) {
+                    const savedSession = localStorage.getItem('lumin_user_session');
+                    if (savedSession) {
+                        try {
+                            currentUser = JSON.parse(savedSession);
+                            console.log("[Lumin PWA] Modo offline detectado. Usando sesión local...");
+                            loadLibrary();
+                            if (initBookId) {
+                                openBook(initBookId, initBookName || "Novela");
+                            } else {
+                                switchView('library-section');
+                            }
+                            // Limpiar URL para no dejar el token visible si recargan
+                            if(window.history && window.history.replaceState) {
+                                window.history.replaceState({}, document.title, window.location.pathname + (initBookId ? "?bookId="+initBookId : ""));
+                            }
+                            return;
+                        } catch(e) {
+                            console.error("Error restaurando sesión offline:", e);
+                        }
+                    }
+                }
+
                 if (statusContainer) statusContainer.style.display = 'block';
                 if (errorEl) errorEl.textContent = '';
                 showLoader("Validando acceso seguro...");
@@ -5463,6 +5487,23 @@
                     })
                     .withFailureHandler(err => {
                         hideLoader();
+                        // Intentar recuperar sesión guardada como fallback si falla la red (por ejemplo, failed to fetch)
+                        const savedSession = localStorage.getItem('lumin_user_session');
+                        if (savedSession) {
+                            try {
+                                currentUser = JSON.parse(savedSession);
+                                console.log("[Lumin PWA] Error de red en validación, fallback a sesión local...");
+                                loadLibrary();
+                                if (initBookId) {
+                                    openBook(initBookId, initBookName || "Novela");
+                                } else {
+                                    switchView('library-section');
+                                }
+                                return;
+                            } catch(e) {
+                                console.error("Error restaurando sesión local de respaldo:", e);
+                            }
+                        }
                         if (statusContainer) statusContainer.style.display = 'none';
                         if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
