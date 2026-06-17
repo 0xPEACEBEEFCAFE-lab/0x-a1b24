@@ -5424,6 +5424,13 @@
             const initBookId = initUrlParams.get('bookId');
             const initBookName = initUrlParams.get('bookName');
 
+            // Generar o recuperar ID de dispositivo único para enlace exclusivo
+            let deviceId = localStorage.getItem('lumin_device_id');
+            if (!deviceId) {
+                deviceId = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('lumin_device_id', deviceId);
+            }
+
             const statusContainer = document.getElementById('login-status-container');
             const errorEl = document.getElementById('login-error');
 
@@ -5508,7 +5515,7 @@
                         if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
-                    .validateOfflineToken(initOfflineToken);
+                    .validateOfflineToken(initOfflineToken, deviceId);
                 return;
             }
 
