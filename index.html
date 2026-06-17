@@ -4457,40 +4457,35 @@
         </div>
     </div>
 
-    <!-- VISTA 1: LOGIN -->
+    <!-- VISTA 1: AUTORIZACIÓN (SIN LOGIN MANUAL) -->
     <section id="login-section" class="view-section view-active" style="justify-content: center; align-items: center; z-index: 10;">
         <div class="login-container">
             <img src="Logo.png" class="login-logo" alt="Lumin Logo">
             <h1 style="color: var(--foreground); margin-bottom: 8px; font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em;">
-                Biblioteca Lumin
+                Biblioteca Lumin VIP
             </h1>
             <p style="color: var(--muted-foreground); margin-bottom: 30px; font-size: 14px; font-weight: 400; letter-spacing: 0.5px;">
-                Tu colección de novelas iluminada
+                Visor de Lectura Autorizado
             </p>
 
-            <input type="text" id="telegram" class="pixel-input" placeholder="@UsuarioTelegram">
-            <input type="text" id="facebook" class="pixel-input" placeholder="Usuario Facebook">
-
-            <button onclick="handleLogin()" class="pixel-button">
-                <i class="fas fa-key"></i> INGRESAR
-            </button>
-            <p id="login-error" style="color: #ff6b6b; margin-top: 20px; font-weight: 500;"></p>
+            <div id="login-status-container">
+                <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--lumin-yellow); margin-bottom: 15px;"></i>
+                <p style="color: var(--lumin-yellow); font-weight: 500;">Esperando autorización...</p>
+            </div>
+            <p id="login-error" style="color: #ff6b6b; margin-top: 20px; font-weight: 500; line-height: 1.5;"></p>
         </div>
     </section>
 
     <!-- VISTA 2: LIBRERÍA -->
     <section id="library-section" class="view-section">
         <!-- Sticky Premium Navbar -->
+        <!-- Sticky Premium Navbar -->
         <header class="library-navbar">
             <div class="navbar-brand" onclick="loadLibrary(false)">
                 <img src="Logo.png" class="navbar-logo" alt="Lumin Logo">
-                <span class="navbar-title">Lumin</span>
+                <span class="navbar-title">Lumin VIP</span>
             </div>
             <div class="navbar-actions">
-                <!-- Botón Admin (solo visible si es admin) -->
-                <button class="navbar-btn btn-admin" id="admin-header-btn" style="display: none;" onclick="showAdminPanel()">
-                    <span>🕯️</span> Panel Admin
-                </button>
                 <button class="navbar-btn btn-logout" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Salir
                 </button>
@@ -4504,53 +4499,21 @@
                 <span>Sin conexión — Solo libros guardados disponibles</span>
             </div>
 
-            <!-- Hero Section -->
-            <div class="library-hero-section">
-                <div id="welcome-user" style="font-size: 13px; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">
-                    Bienvenido
-                </div>
-                <h2>Tu Biblioteca</h2>
-                <p>Explora tu colección de PDFs en un espacio diseñado para la lectura inmersiva.</p>
-                
-                <!-- Stats Badges -->
-                <div class="stats-badges-container">
-                    <div class="stats-badge">
-                        <span class="stats-badge-dot pulse"></span>
-                        <span id="stats-in-progress">0 en progreso</span>
-                    </div>
-                    <div class="stats-badge">
-                        <i class="fas fa-check-circle" style="color: #10B981;"></i>
-                        <span id="stats-completed">0 completados</span>
-                    </div>
-                    <div class="stats-badge">
-                        <i class="fas fa-book" style="color: var(--lumin-yellow-soft);"></i>
-                        <span id="stats-total">0 total PDFs</span>
-                    </div>
-                </div>
+            <!-- Hero Section / Bóveda Offline -->
+            <div class="library-hero-section" style="text-align: center; margin-top: 40px; width: 100%;">
+                <h2 style="font-family: 'Cinzel', serif; color: var(--lumin-yellow); font-size: 28px; margin-bottom: 15px;">Novelas Guardadas</h2>
+                <p style="color: var(--muted-foreground); max-width: 500px; margin: 0 auto 30px;">
+                    Estas novelas están guardadas localmente en este dispositivo y están listas para leerse incluso sin conexión a Internet.
+                </p>
             </div>
 
-            <!-- Modern Search Bar -->
-            <div class="search-bar-wrapper">
-                <i class="fas fa-search search-bar-icon"></i>
-                <input type="text" id="site-search" class="search-bar-input" placeholder="Buscar por título o autor..." onkeyup="filterBooksDebounced()">
-                <button id="search-clear-btn" class="search-bar-clear" onclick="clearSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
+            <!-- Book Carousel (reutilizado para la lista local) -->
+            <div id="carousel-view" class="carousel-container" style="justify-content: center; width: 100%;">
+                <div class="carousel-book-display" id="carousel-book-display" style="justify-content: center; flex-wrap: wrap; gap: 20px; overflow-x: visible;"></div>
             </div>
+            <div class="carousel-counter" id="carousel-counter" style="display:none;"></div>
 
-            <!-- Book Carousel -->
-            <div id="carousel-view" class="carousel-container">
-                <button class="carousel-arrow" id="carousel-prev" onclick="navigateCarousel(-1)">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <div class="carousel-book-display" id="carousel-book-display"></div>
-                <button class="carousel-arrow" id="carousel-next" onclick="navigateCarousel(1)">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            <div class="carousel-counter" id="carousel-counter"></div>
-
-            <div id="books-grid" class="books-grid"></div>
+            <div id="books-grid" class="books-grid" style="display:none;"></div>
         
             <!-- PANEL DE GESTIÓN DE DISEÑO -->
             <div id="ui-settings-panel" class="ui-settings-panel" style="display: none;">
@@ -5461,8 +5424,14 @@
             const initBookId = initUrlParams.get('bookId');
             const initBookName = initUrlParams.get('bookName');
 
+            const statusContainer = document.getElementById('login-status-container');
+            const errorEl = document.getElementById('login-error');
+
             if (initOfflineToken) {
+                if (statusContainer) statusContainer.style.display = 'block';
+                if (errorEl) errorEl.textContent = '';
                 showLoader("Validando acceso seguro...");
+                
                 google.script.run
                     .withSuccessHandler(response => {
                         hideLoader();
@@ -5473,18 +5442,13 @@
                                 sessionToken: response.sessionToken
                             };
                             localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
-                            document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
-                            
-                            const adminBtn = document.getElementById('admin-header-btn');
-                            if (adminBtn) {
-                                adminBtn.style.display = currentUser.isAdmin ? 'inline-flex' : 'none';
-                            }
                             
                             loadLibrary();
-                            switchView('library-section');
                             
                             if (initBookId) {
                                 openBook(initBookId, initBookName || "Novela");
+                            } else {
+                                switchView('library-section');
                             }
                             
                             // Limpiar URL para no dejar el token visible si recargan (opcional)
@@ -5492,13 +5456,15 @@
                                 window.history.replaceState({}, document.title, window.location.pathname + (initBookId ? "?bookId="+initBookId : ""));
                             }
                         } else {
-                            document.getElementById('login-error').textContent = response.error || "Token inválido o expirado.";
+                            if (statusContainer) statusContainer.style.display = 'none';
+                            if (errorEl) errorEl.textContent = response.error || "Token inválido o expirado.";
                             switchView('login-section');
                         }
                     })
                     .withFailureHandler(err => {
                         hideLoader();
-                        document.getElementById('login-error').textContent = "Error de conexión: " + err;
+                        if (statusContainer) statusContainer.style.display = 'none';
+                        if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
                     .validateOfflineToken(initOfflineToken);
@@ -5509,6 +5475,8 @@
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
                 const initData = window.Telegram.WebApp.initData;
                 showLoader("Autenticando con Telegram VIP...");
+                if (statusContainer) statusContainer.style.display = 'block';
+                if (errorEl) errorEl.textContent = '';
                 
                 try { window.Telegram.WebApp.expand(); } catch(e) {}
 
@@ -5518,15 +5486,8 @@
                         if (response.isValid) {
                             currentUser = response;
                             localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
-                            document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
-                            
-                            const adminBtn = document.getElementById('admin-header-btn');
-                            if (adminBtn) {
-                                adminBtn.style.display = currentUser.isAdmin ? 'inline-flex' : 'none';
-                            }
                             
                             loadLibrary();
-                            switchView('library-section');
                             
                             // Abrir libro directamente si viene en la URL
                             const urlParams = new URLSearchParams(window.location.search);
@@ -5534,15 +5495,19 @@
                             const bookName = urlParams.get('bookName');
                             if (bookId) {
                                 openBook(bookId, bookName || "Novela");
+                            } else {
+                                switchView('library-section');
                             }
                         } else {
-                            document.getElementById('login-error').textContent = response.error || "No estás registrado en la base de datos VIP.";
+                            if (statusContainer) statusContainer.style.display = 'none';
+                            if (errorEl) errorEl.textContent = response.error || "No estás registrado en la base de datos VIP.";
                             switchView('login-section');
                         }
                     })
                     .withFailureHandler(err => {
                         hideLoader();
-                        document.getElementById('login-error').textContent = "Error de conexión: " + err;
+                        if (statusContainer) statusContainer.style.display = 'none';
+                        if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
                     .validateViaTelegramWebApp(initData);
@@ -5551,15 +5516,7 @@
                 if (savedSession) {
                     try {
                         currentUser = JSON.parse(savedSession);
-                        document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
-                        
-                        const adminBtn = document.getElementById('admin-header-btn');
-                        if (adminBtn) {
-                            adminBtn.style.display = currentUser.isAdmin ? 'inline-flex' : 'none';
-                        }
-                        
                         console.log("[Lumin PWA] Sesión restaurada, saltando login...");
-                        switchView('library-section');
                         loadLibrary();
                         
                         const urlParams = new URLSearchParams(window.location.search);
@@ -5567,10 +5524,20 @@
                         const bookName = urlParams.get('bookName');
                         if (bookId) {
                             openBook(bookId, bookName || "Novela");
+                        } else {
+                            switchView('library-section');
                         }
                     } catch(e) {
                         console.error("Error restaurando sesión:", e);
+                        if (statusContainer) statusContainer.style.display = 'none';
+                        if (errorEl) errorEl.textContent = "Error al restaurar la sesión local.";
+                        switchView('login-section');
                     }
+                } else {
+                    // Sin sesión activa ni token
+                    if (statusContainer) statusContainer.style.display = 'none';
+                    if (errorEl) errorEl.textContent = "Acceso Denegado: Por favor, abre el enlace de lectura desde el Bot de Telegram VIP.";
+                    switchView('login-section');
                 }
             }
         });
@@ -5580,10 +5547,11 @@
             currentUser = null;
             allBooks = [];
             filteredBooks = [];
-            document.getElementById('welcome-user').textContent = '';
-            document.getElementById('login-error').textContent = ''; 
-            document.getElementById('telegram').value = '';
-            document.getElementById('facebook').value = '';
+            
+            const statusContainer = document.getElementById('login-status-container');
+            const errorEl = document.getElementById('login-error');
+            if (statusContainer) statusContainer.style.display = 'none';
+            if (errorEl) errorEl.textContent = 'Sesión cerrada. Accede nuevamente desde el Bot de Telegram VIP.';
             switchView('login-section');
         }
 
@@ -5630,81 +5598,47 @@
 
         // === LIBRERÍA ===
         function loadLibrary(useCache = true) {
-            const now = Date.now();
-            if (useCache && allBooks.length > 0 && (now - lastCacheTime) < CACHE_DURATION) {
-                filteredBooks = [...allBooks];
-                currentBookIndex = 0;
-                renderCarousel();
-                return;
-            }
-
             if (isLoading) return;
             isLoading = true;
 
-            showLoader("Detectando red y catálogos...");
+            showLoader("Cargando novelas guardadas...");
             
-            const loadOfflineLibrary = () => {
-                console.warn("[Lumin PWA] Entrando en Modo Offline...");
-                if (typeof LuminOfflineDB !== 'undefined') {
-                    LuminOfflineDB.getAllBooksMeta().then(offlineBooks => {
-                        hideLoader();
-                        isLoading = false;
-                        if(offlineBooks && offlineBooks.length > 0) {
-                            console.log("[Lumin PWA] Olivas encontradas en bveda local:", offlineBooks.length);
-                            allBooks = offlineBooks.map(b => ({
-                                id: b.id,
-                                fileId: b.id,
-                                name: b.title,
-                                size: b.size || 0,
-                                date: b.savedAt,
-                                isOffline: true // Marcador para la UI
-                            }));
-                            filteredBooks = [...allBooks];
-                            currentBookIndex = 0;
-                            renderCarousel();
-                        } else {
-                            allBooks = []; 
-                            filteredBooks = [];
-                            renderCarousel();
-                            alert("No tienes internet y la bveda local est vaca. Guarda una novela mientras ests online para leerla aqu.");
-                        }
-                    }).catch(err => {
-                        console.error("[Lumin PWA] Error crítico leyendo bveda:", err);
-                        hideLoader(); isLoading = false;
-                        alert("Error al intentar abrir la boveda local.");
-                    });
-                } else {
-                    console.error("[Lumin PWA] LuminOfflineDB no está definido.");
-                    hideLoader(); isLoading = false;
-                }
-            };
-
-            // Detección proactiva de red
-            if (!navigator.onLine) {
-                console.log("[Lumin PWA] Navegador reporta estado OFFLINE de inicio.");
-                return loadOfflineLibrary();
-            }
-
-            google.script.run
-                .withSuccessHandler(books => {
-                    isLoading = false;
+            if (typeof LuminOfflineDB !== 'undefined') {
+                LuminOfflineDB.getAllBooksMeta().then(offlineBooks => {
                     hideLoader();
-                    allBooks = books;
-                    filteredBooks = [...allBooks];
-                    currentBookIndex = 0;
-                    lastCacheTime = Date.now();
-
-                    books.forEach(book => {
-                        bookCache.set((book.fileId || book.id), { data: book, timestamp: lastCacheTime });
-                    });
-
-                    renderCarousel();
-                })
-                .withFailureHandler(err => {
-                    // Fallo al traer base de datos (Ej: Servidor de Google en Cache Falló o No Hay Internet)
-                    loadOfflineLibrary();
-                })
-                .getLibraryContent();
+                    isLoading = false;
+                    if (offlineBooks && offlineBooks.length > 0) {
+                        console.log("[Lumin PWA] Novelas encontradas en bóveda local:", offlineBooks.length);
+                        allBooks = offlineBooks.map(b => ({
+                            id: b.id,
+                            fileId: b.id,
+                            name: b.title,
+                            size: b.size || 0,
+                            date: b.savedAt,
+                            isOffline: true
+                        }));
+                        filteredBooks = [...allBooks];
+                        currentBookIndex = 0;
+                        renderCarousel();
+                    } else {
+                        allBooks = []; 
+                        filteredBooks = [];
+                        renderCarousel();
+                        const bookDisplay = document.getElementById('carousel-book-display');
+                        if (bookDisplay) {
+                            bookDisplay.innerHTML = '<p style="text-align:center; color: var(--lumin-gold-dark); font-size: 14px; width: 100%; padding: 40px 0; line-height: 1.6;">No tienes novelas guardadas localmente.<br>Abre una novela desde el Bot de Telegram VIP mientras estés online para guardarla en este dispositivo.</p>';
+                        }
+                    }
+                }).catch(err => {
+                    console.error("[Lumin PWA] Error leyendo bóveda:", err);
+                    hideLoader(); 
+                    isLoading = false;
+                });
+            } else {
+                console.error("[Lumin PWA] LuminOfflineDB no está definido.");
+                hideLoader(); 
+                isLoading = false;
+            }
         }
 
         function getBookColor(title) {
