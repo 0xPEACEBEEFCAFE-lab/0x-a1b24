@@ -4768,10 +4768,6 @@
             <!-- Versión Desktop -->
             <div class="viewer-header-desktop">
                 <div class="viewer-header-left">
-                    <button onclick="goBackToLibrary()" class="pixel-button secondary small"
-                        title="Volver a la librería">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
                     <button onclick="toggleHeader()" class="pixel-button secondary icon-only" title="Ocultar controles">
                         <i class="fas fa-eye-slash" id="toggle-header-icon"></i>
                     </button>
@@ -4857,20 +4853,12 @@
                         style="display:none;" title="Descargar">
                         <i class="fas fa-download"></i>
                     </button>
-
-                    <button id="save-offline-btn" onclick="saveForOffline()" class="pixel-button secondary icon-only save-offline-btn"
-                        title="Guardar para leer sin internet">
-                        <i class="fas fa-cloud-download-alt" id="save-offline-icon"></i>
-                    </button>
                 </div>
             </div>
 
             <!-- Versión Móvil -->
             <div class="viewer-header-mobile">
                 <div class="viewer-header-mobile-top">
-                    <button onclick="goBackToLibrary()" class="pixel-button secondary icon-only" title="Volver">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
                     <span class="viewer-mobile-title" id="viewer-title-mobile">Título</span>
                     <button onclick="toggleHeader()" class="pixel-button secondary icon-only" title="Ocultar">
                         <i class="fas fa-eye-slash" id="toggle-header-icon-mobile"></i>
@@ -4940,11 +4928,6 @@
                     <button id="download-btn-mobile" onclick="downloadWithWatermark()"
                         class="pixel-button secondary icon-only" style="display:none;" title="Descargar">
                         <i class="fas fa-download"></i>
-                    </button>
-
-                    <button id="save-offline-btn-mobile" onclick="saveForOffline()" class="pixel-button secondary icon-only save-offline-btn"
-                        title="Guardar offline">
-                        <i class="fas fa-cloud-download-alt" id="save-offline-icon-mobile"></i>
                     </button>
                 </div>
             </div>
@@ -5424,11 +5407,17 @@
             const initBookId = initUrlParams.get('bookId');
             const initBookName = initUrlParams.get('bookName');
 
-            // Generar o recuperar ID de dispositivo único para enlace exclusivo
-            let deviceId = localStorage.getItem('lumin_device_id');
-            if (!deviceId) {
-                deviceId = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-                localStorage.setItem('lumin_device_id', deviceId);
+            // Generar o recuperar ID de dispositivo único para enlace exclusivo con try-catch
+            let deviceId = '';
+            try {
+                deviceId = localStorage.getItem('lumin_device_id');
+                if (!deviceId) {
+                    deviceId = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                    localStorage.setItem('lumin_device_id', deviceId);
+                }
+            } catch (e) {
+                console.warn("localStorage no disponible, usando ID temporal.", e);
+                deviceId = 'temp_dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             }
 
             const statusContainer = document.getElementById('login-status-container');
@@ -5515,7 +5504,7 @@
                         if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
-                    .validateOfflineToken(initOfflineToken, deviceId);
+                    .validateOfflineToken(initOfflineToken, deviceId, navigator.userAgent);
                 return;
             }
 
@@ -7353,6 +7342,19 @@
                 renderPage(pageNum);
                 hideLoader();
                 isOpeningBook = false;
+
+                // Auto-guardado offline automático
+                if (typeof LuminOfflineDB !== 'undefined' && targetFileId && pdfDataBytes) {
+                    const title = document.getElementById('viewer-title').textContent || 'Novela';
+                    LuminOfflineDB.saveBook(targetFileId, title, pdfDataBytes, currentDrmType)
+                        .then(() => {
+                            console.log("[Lumin PWA] Novela guardada automáticamente offline:", targetFileId);
+                            renderOfflineCacheStats();
+                        })
+                        .catch(err => {
+                            console.warn("Error al guardar offline automáticamente:", err);
+                        });
+                }
 
             } catch (e) {
                 if (e.message && (e.message.includes("worker") || e.message.includes("Setting up fake worker failed"))) {
