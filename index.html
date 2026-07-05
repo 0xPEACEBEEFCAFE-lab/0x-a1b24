@@ -9678,7 +9678,7 @@
             const container = document.getElementById('viewer-container');
             if (!container) return;
 
-            // Limpiar clases de filtro
+            // Limpiar clases de filtro (mantener por compatibilidad)
             container.classList.remove('pdf-filter-contrast', 'pdf-filter-sepia', 'pdf-filter-grayscale', 'pdf-filter-invert');
             
             // Remover estado activo de botones
@@ -9689,7 +9689,20 @@
             });
 
             currentVisualFilter = filterType;
-            
+
+            // Mapeo de filtros a valores CSS reales
+            const filterMap = {
+                'none': '',
+                'invert': 'invert(1)',
+                'contrast': 'invert(1) hue-rotate(180deg) contrast(1.15) brightness(0.95)',
+                'sepia': 'sepia(0.8) contrast(0.95) brightness(0.95)',
+                'grayscale': 'grayscale(1) contrast(1.1)'
+            };
+
+            // APLICAR FILTRO DIRECTAMENTE AL CONTENEDOR (inline style — máxima prioridad CSS)
+            container.style.filter = filterMap[filterType] || '';
+            container.style.webkitFilter = filterMap[filterType] || ''; // Safari/iOS
+
             if (filterType !== 'none') {
                 container.classList.add(`pdf-filter-${filterType}`);
                 const activeBtn = document.getElementById(`acc-filter-${filterType}`);
@@ -9700,7 +9713,8 @@
             }
 
             // Anunciar cambio a lectores de pantalla
-            const message = filterType === 'none' ? "Filtro visual desactivado" : `Filtro visual ${filterType} activado`;
+            const filterNames = { 'none': 'desactivado', 'invert': 'Invertir colores', 'contrast': 'Alto contraste', 'sepia': 'Sepia', 'grayscale': 'Escala de grises' };
+            const message = `Filtro visual: ${filterNames[filterType] || filterType}`;
             announceAccessibilityChange(message);
         }
 
