@@ -2318,21 +2318,29 @@
         }
 
         /* Modos de filtro aplicados al canvas PDF */
-        .pdf-filter-invert canvas {
+        .pdf-filter-invert canvas,
+        .pdf-filter-invert .scroll-page-container canvas,
+        .pdf-filter-invert #viewer-container canvas {
             filter: invert(1) !important;
             background: #000 !important;
         }
 
-        .pdf-filter-contrast canvas {
+        .pdf-filter-contrast canvas,
+        .pdf-filter-contrast .scroll-page-container canvas,
+        .pdf-filter-contrast #viewer-container canvas {
             filter: invert(1) hue-rotate(180deg) contrast(1.15) brightness(0.95) !important;
             background: #000 !important;
         }
 
-        .pdf-filter-sepia canvas {
+        .pdf-filter-sepia canvas,
+        .pdf-filter-sepia .scroll-page-container canvas,
+        .pdf-filter-sepia #viewer-container canvas {
             filter: sepia(0.8) contrast(0.95) brightness(0.95) !important;
         }
 
-        .pdf-filter-grayscale canvas {
+        .pdf-filter-grayscale canvas,
+        .pdf-filter-grayscale .scroll-page-container canvas,
+        .pdf-filter-grayscale #viewer-container canvas {
             filter: grayscale(1) contrast(1.1) !important;
         }
 
