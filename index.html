@@ -5133,16 +5133,16 @@
             <h4><i class="fas fa-universal-access"></i> Accesibilidad Visual</h4>
             
             <div class="acc-option-item">
-                <label>Filtros del Lector</label>
+                <label>Modo de Lectura</label>
                 <div class="acc-buttons">
                     <button class="acc-btn active" id="acc-filter-none" onclick="setVisualFilter('none')" aria-label="Sin filtro">
-                        Normal
+                        <i class="fas fa-file-alt"></i> Normal
                     </button>
-                    <button class="acc-btn" id="acc-filter-invert" onclick="setVisualFilter('invert')" aria-label="Invertir colores del PDF">
-                        <i class="fas fa-arrows-spin"></i> Invertir
+                    <button class="acc-btn" id="acc-filter-light" onclick="setVisualFilter('light')" aria-label="Modo claro: fondo beige con texto negro">
+                        <i class="fas fa-sun"></i> Modo Claro
                     </button>
-                    <button class="acc-btn" id="acc-filter-contrast" onclick="setVisualFilter('contrast')" aria-label="Alto Contraste">
-                        <i class="fas fa-circle-half-stroke"></i> Alto Contraste
+                    <button class="acc-btn" id="acc-filter-dark" onclick="setVisualFilter('dark')" aria-label="Modo oscuro: fondo negro con texto blanco">
+                        <i class="fas fa-moon"></i> Modo Oscuro
                     </button>
                     <button class="acc-btn" id="acc-filter-sepia" onclick="setVisualFilter('sepia')" aria-label="Filtro Sepia">
                         <i class="fas fa-leaf"></i> Sepia
@@ -7771,6 +7771,11 @@
                     background: 'white'
                 }).promise;
 
+                // Aplicar filtro de píxeles si está activo
+                if (currentVisualFilter && currentVisualFilter !== 'none') {
+                    applyPixelFilter(canvas, currentVisualFilter);
+                }
+
                 // DIBUJAR RESALTADOS DE BÚSQUEDA SI HAY UNA QUERY ACTIVA
                 if (pdfSearchQuery) {
                     try {
@@ -7868,6 +7873,11 @@
                 background: 'white'
             }).promise;
 
+            // Aplicar filtro de píxeles si está activo
+            if (currentVisualFilter && currentVisualFilter !== 'none') {
+                applyPixelFilter(canvas, currentVisualFilter);
+            }
+
             // DIBUJAR RESALTADOS DE BÚSQUEDA SI HAY UNA QUERY ACTIVA
             if (pdfSearchQuery) {
                 try {
@@ -7954,6 +7964,11 @@
                     viewport: viewport,
                     background: 'white'
                 }).promise;
+
+                // Aplicar filtro de píxeles si está activo
+                if (currentVisualFilter && currentVisualFilter !== 'none') {
+                    applyPixelFilter(canvas, currentVisualFilter);
+                }
 
                 targetElement.innerHTML = '';
                 targetElement.appendChild(canvas);
@@ -9678,8 +9693,10 @@
             const container = document.getElementById('viewer-container');
             if (!container) return;
 
-            // Limpiar clases de filtro (mantener por compatibilidad)
-            container.classList.remove('pdf-filter-contrast', 'pdf-filter-sepia', 'pdf-filter-grayscale', 'pdf-filter-invert');
+            // Limpiar estilos inline de filtro CSS (ya no se usan, pero limpiar por si acaso)
+            container.style.filter = '';
+            container.style.webkitFilter = '';
+            container.classList.remove('pdf-filter-contrast', 'pdf-filter-sepia', 'pdf-filter-grayscale', 'pdf-filter-invert', 'pdf-filter-light', 'pdf-filter-dark');
             
             // Remover estado activo de botones
             document.querySelectorAll('#accessibility-panel .acc-btn').forEach(btn => {
@@ -9690,21 +9707,7 @@
 
             currentVisualFilter = filterType;
 
-            // Mapeo de filtros a valores CSS reales
-            const filterMap = {
-                'none': '',
-                'invert': 'invert(1)',
-                'contrast': 'invert(1) hue-rotate(180deg) contrast(1.15) brightness(0.95)',
-                'sepia': 'sepia(0.8) contrast(0.95) brightness(0.95)',
-                'grayscale': 'grayscale(1) contrast(1.1)'
-            };
-
-            // APLICAR FILTRO DIRECTAMENTE AL CONTENEDOR (inline style — máxima prioridad CSS)
-            container.style.filter = filterMap[filterType] || '';
-            container.style.webkitFilter = filterMap[filterType] || ''; // Safari/iOS
-
             if (filterType !== 'none') {
-                container.classList.add(`pdf-filter-${filterType}`);
                 const activeBtn = document.getElementById(`acc-filter-${filterType}`);
                 if (activeBtn) activeBtn.classList.add('active');
             } else {
@@ -9712,10 +9715,64 @@
                 if (noneBtn) noneBtn.classList.add('active');
             }
 
+            // Re-renderizar la página actual para aplicar/quitar el filtro de píxeles
+            if (pdfDoc) {
+                renderPage(pageNum);
+            }
+
             // Anunciar cambio a lectores de pantalla
-            const filterNames = { 'none': 'desactivado', 'invert': 'Invertir colores', 'contrast': 'Alto contraste', 'sepia': 'Sepia', 'grayscale': 'Escala de grises' };
-            const message = `Filtro visual: ${filterNames[filterType] || filterType}`;
-            announceAccessibilityChange(message);
+            const filterNames = { 'none': 'Normal', 'light': 'Modo Claro', 'dark': 'Modo Oscuro', 'sepia': 'Sepia', 'grayscale': 'Escala de grises' };
+            announceAccessibilityChange('Filtro visual: ' + (filterNames[filterType] || filterType));
+        }
+
+        // Manipulación directa de píxeles del canvas (funciona en cualquier entorno)
+        function applyPixelFilter(canvas, filterType) {
+            if (!canvas || !filterType || filterType === 'none') return;
+            try {
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const d = imageData.data;
+                const len = d.length;
+
+                if (filterType === 'dark') {
+                    // Modo Oscuro: inversión pura de colores
+                    // Blanco→Negro, Negro→Blanco
+                    for (let i = 0; i < len; i += 4) {
+                        d[i]     = 255 - d[i];     // R
+                        d[i + 1] = 255 - d[i + 1]; // G
+                        d[i + 2] = 255 - d[i + 2]; // B
+                    }
+                } else if (filterType === 'light') {
+                    // Modo Claro: inversión + tinte beige cálido
+                    // Fondo oscuro→beige cálido, Letras claras→negras
+                    for (let i = 0; i < len; i += 4) {
+                        let r = 255 - d[i];
+                        let g = 255 - d[i + 1];
+                        let b = 255 - d[i + 2];
+                        // Aplicar calidez beige (reducir azules, mantener rojos)
+                        d[i]     = Math.min(255, r);
+                        d[i + 1] = Math.min(255, g * 0.92);
+                        d[i + 2] = Math.min(255, b * 0.78);
+                    }
+                } else if (filterType === 'sepia') {
+                    for (let i = 0; i < len; i += 4) {
+                        const r = d[i], g = d[i + 1], b = d[i + 2];
+                        d[i]     = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+                        d[i + 1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+                        d[i + 2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+                    }
+                } else if (filterType === 'grayscale') {
+                    for (let i = 0; i < len; i += 4) {
+                        const avg = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+                        d[i] = d[i + 1] = d[i + 2] = avg;
+                    }
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+            } catch (e) {
+                console.warn('[Lumin] Error aplicando filtro de píxeles:', e);
+            }
         }
 
         function changeUiScale(amount, reset = false) {
@@ -9837,7 +9894,7 @@
                             break;
                         case 'h': // Alt + H: Rotar filtros de contraste
                             e.preventDefault();
-                            const filters = ['none', 'invert', 'contrast', 'sepia', 'grayscale'];
+                            const filters = ['none', 'light', 'dark', 'sepia', 'grayscale'];
                             const nextIndex = (filters.indexOf(currentVisualFilter) + 1) % filters.length;
                             setVisualFilter(filters[nextIndex]);
                             break;
