@@ -7254,7 +7254,7 @@
 
             // 13. Resetear panel de accesibilidad y estados visuales
             const accPanel = document.getElementById('accessibility-panel');
-            if (accPanel) accPanel.style.display = 'none';
+            if (accPanel) accPanel.classList.remove('active');
             setVisualFilter('none');
             changeUiScale(0, true);
             if (isRulerActive) toggleReadingRuler();
@@ -9650,9 +9650,11 @@
             // Cerrar otros paneles para evitar superposición
             const bookmarkPanel = document.getElementById('bookmark-panel');
             if (bookmarkPanel) bookmarkPanel.classList.remove('active');
+            
             const searchPanel = document.getElementById('search-panel');
             if (searchPanel) searchPanel.style.display = 'none';
             
+            // Si el panel de accesibilidad está actualmente inactivo, nos aseguramos que empiece limpio
             panel.classList.toggle('active');
         }
 
