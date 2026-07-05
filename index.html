@@ -79,8 +79,13 @@
                         return;
                     }
 
+                    // Configurar un timeout de 15 segundos para el API Fetch (crucial para móviles iOS/Android)
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
                     fetch(GAS_BACKEND_URL, {
                         method: "POST",
+                        mode: "cors",
                         redirect: "follow",
                         headers: {
                             "Content-Type": "text/plain;charset=utf-8",
@@ -90,10 +95,28 @@
                             args: cleanArgs,
                             sessionToken: currentUser ? currentUser.sessionToken : null,
                             origin_url: window.location.origin
-                        })
+                        }),
+                        signal: controller.signal
                     })
-                    .then(res => res.json())
-                    .then(data => {
+                    .then(res => {
+                        clearTimeout(timeoutId);
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                        }
+                        return res.text();
+                    })
+                    .then(text => {
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (jsonErr) {
+                            // Si Google Apps Script redirige a una página HTML de error de sesión o similar
+                            if (text.includes("Service Unavailable") || text.includes("Error")) {
+                                throw new Error("Servidor no disponible temporalmente. Inténtalo de nuevo.");
+                            }
+                            throw new Error("Respuesta inválida del servidor (no JSON).");
+                        }
+                        
                         if (data.error || data.result?.error) { 
                             console.error("[Lumin API Error]", data.error || data.result?.error);
                             if (failureCb) failureCb(data.error || data.result?.error);
@@ -108,9 +131,12 @@
                         }
                     })
                     .catch(err => {
+                        clearTimeout(timeoutId);
+                        const isTimeout = err.name === 'AbortError';
+                        const displayErr = isTimeout ? "Tiempo de espera agotado. Reintente." : err.message || err;
                         console.error("[Lumin API Fetch Failed]", err);
-                        if (failureCb) failureCb(err);
-                        else console.warn("Fallo en la comunicación con el servidor.");
+                        if (failureCb) failureCb(displayErr);
+                        else console.warn("Fallo en la comunicación con el servidor: " + displayErr);
                     });
                 };
             }
@@ -2177,6 +2203,141 @@
             text-align: center;
             padding: 30px;
             font-style: italic;
+        }
+
+        /* === ACCESIBILIDAD Y FILTROS DEL VISOR === */
+        .accessibility-panel {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            width: 320px;
+            background: linear-gradient(145deg, var(--lumin-dark), var(--lumin-gray));
+            border: 2px solid var(--lumin-yellow);
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 250;
+            display: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(253, 253, 150, 0.15);
+        }
+
+        .accessibility-panel.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .accessibility-panel h4 {
+            color: var(--lumin-yellow);
+            margin-bottom: 15px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(253, 253, 150, 0.1);
+            padding-bottom: 8px;
+        }
+
+        .acc-option-item {
+            margin-bottom: 15px;
+        }
+
+        .acc-option-item label {
+            display: block;
+            color: var(--lumin-text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .acc-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .acc-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(253, 253, 150, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--foreground);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .acc-btn:hover {
+            background: rgba(253, 253, 150, 0.15);
+        }
+
+        .acc-btn.active {
+            background: var(--lumin-yellow);
+            color: var(--lumin-black);
+            border-color: var(--lumin-yellow);
+        }
+
+        /* Regla de lectura visual */
+        .reading-ruler {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--lumin-yellow);
+            opacity: 0.65;
+            box-shadow: 0 0 10px var(--lumin-yellow);
+            z-index: 10;
+            pointer-events: auto;
+            cursor: ns-resize;
+            display: none;
+        }
+
+        /* Handle visual para arrastrar la regla en móviles */
+        .reading-ruler::after {
+            content: '↔';
+            position: absolute;
+            left: 50%;
+            top: -10px;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 24px;
+            background: var(--lumin-yellow);
+            color: var(--lumin-black);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Modos de filtro aplicados al canvas PDF */
+        .pdf-filter-contrast canvas {
+            filter: invert(1) hue-rotate(180deg) contrast(1.15) brightness(0.95) !important;
+            background: #000 !important;
+        }
+
+        .pdf-filter-sepia canvas {
+            filter: sepia(0.8) contrast(0.95) brightness(0.95) !important;
+        }
+
+        .pdf-filter-grayscale canvas {
+            filter: grayscale(1) contrast(1.1) !important;
+        }
+
+        /* Escala de UI global controlada por variable CSS */
+        :root {
+            --ui-scale-factor: 1;
+        }
+        
+        .library-navbar, .viewer-header, .bookmark-panel, .audio-panel, .accessibility-panel {
+            transform-origin: top right;
         }
 
         /* === PANEL DE AUDIO/TTS === */
@@ -4762,13 +4923,13 @@
     </section>
 
     <!-- VISTA 3: VISOR -->
-    <section id="viewer-section" class="view-section">
+    <section id="viewer-section" class="view-section" role="main" aria-label="Visor de novela">
         <!-- HEADER DESKTOP -->
-        <div class="viewer-header" id="viewer-header">
+        <div class="viewer-header" id="viewer-header" role="toolbar" aria-label="Controles del visor">
             <!-- Versión Desktop -->
             <div class="viewer-header-desktop">
                 <div class="viewer-header-left">
-                    <button onclick="toggleHeader()" class="pixel-button secondary icon-only" title="Ocultar controles">
+                    <button onclick="toggleHeader()" class="pixel-button secondary icon-only" title="Ocultar controles" aria-label="Ocultar controles del visor">
                         <i class="fas fa-eye-slash" id="toggle-header-icon"></i>
                     </button>
                 </div>
@@ -4778,11 +4939,15 @@
                 </div>
 
                 <div class="viewer-header-right">
-                    <!-- Grupo: Audio/TTS -->
+                    <!-- Grupo: Audio/TTS y Accesibilidad -->
                     <div class="control-group">
                         <button onclick="toggleAudioPanel()" class="pixel-button secondary icon-only"
-                            title="Escuchar documento (TTS)">
+                            title="Escuchar documento (TTS)" aria-label="Abrir panel de audio texto a voz">
                             <i class="fas fa-headphones"></i>
+                        </button>
+                        <button onclick="toggleAccessibilityPanel()" class="pixel-button secondary icon-only"
+                            id="viewer-acc-btn" title="Opciones de Accesibilidad Visual" aria-label="Accesibilidad">
+                            <i class="fas fa-universal-access"></i>
                         </button>
                     </div>
 
@@ -4791,7 +4956,7 @@
                     <!-- Grupo: Modo Vista -->
                     <div class="control-group">
                         <button onclick="toggleViewMode()" class="pixel-button secondary icon-only active"
-                            id="view-mode-btn" title="Cambiar modo (Página/Scroll)">
+                            id="view-mode-btn" title="Cambiar modo (Página/Scroll)" aria-label="Cambiar modo de vista entre página y scroll">
                             <i class="fas fa-file-alt" id="view-mode-icon"></i>
                         </button>
                     </div>
@@ -4801,11 +4966,11 @@
                     <!-- Grupo: Marcadores -->
                     <div class="control-group">
                         <button onclick="toggleBookmarkPanel()" class="pixel-button secondary icon-only"
-                            title="Ver marcadores">
+                            title="Ver marcadores" aria-label="Abrir panel de marcadores">
                             <i class="fas fa-bookmark"></i>
                         </button>
                         <button onclick="saveCurrentBookmark()" class="pixel-button secondary icon-only"
-                            title="Guardar marcador">
+                            title="Guardar marcador" aria-label="Guardar marcador en página actual">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -4815,7 +4980,7 @@
                     <!-- Grupo: Buscar -->
                     <div class="control-group">
                         <button onclick="toggleSearchPanel()" class="pixel-button secondary icon-only"
-                            id="search-pdf-btn" title="Buscar palabras">
+                            id="search-pdf-btn" title="Buscar palabras" aria-label="Buscar texto en la novela">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
@@ -4823,11 +4988,11 @@
                     <div class="control-group-separator"></div>
 
                     <!-- Grupo: Zoom -->
-                    <div class="control-group">
-                        <button onclick="changeZoom(-0.2)" class="pixel-button secondary icon-only" title="Alejar">
+                    <div class="control-group" role="group" aria-label="Zoom del documento">
+                        <button onclick="changeZoom(-0.2)" class="pixel-button secondary icon-only" title="Alejar" aria-label="Reducir zoom">
                             <i class="fas fa-minus"></i>
                         </button>
-                        <button onclick="changeZoom(0.2)" class="pixel-button secondary icon-only" title="Acercar">
+                        <button onclick="changeZoom(0.2)" class="pixel-button secondary icon-only" title="Acercar" aria-label="Aumentar zoom">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -4835,16 +5000,16 @@
                     <div class="control-group-separator"></div>
 
                     <!-- Grupo: Navegación -->
-                    <div class="control-group" id="page-nav-group">
+                    <div class="control-group" id="page-nav-group" role="group" aria-label="Navegación de páginas">
                         <button onclick="changePage(-1)" class="pixel-button secondary icon-only"
-                            title="Página anterior">
+                            title="Página anterior" aria-label="Ir a la página anterior">
                             <i class="fas fa-chevron-left"></i>
                         </button>
                         <input type="number" id="page-input" class="control-input" value="1" min="1"
-                            onchange="jumpToPage(this.value)">
+                            onchange="jumpToPage(this.value)" aria-label="Número de página actual">
                         <span class="page-indicator">/ <span id="page-count">?</span></span>
                         <button onclick="changePage(1)" class="pixel-button secondary icon-only"
-                            title="Página siguiente">
+                            title="Página siguiente" aria-label="Ir a la página siguiente">
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
@@ -4870,6 +5035,10 @@
                         <button onclick="toggleAudioPanel()" class="pixel-button secondary icon-only"
                             title="Escuchar (TTS)">
                             <i class="fas fa-headphones"></i>
+                        </button>
+                        <button onclick="toggleAccessibilityPanel()" class="pixel-button secondary icon-only"
+                            id="viewer-acc-btn-mobile" title="Accesibilidad Visual" aria-label="Accesibilidad">
+                            <i class="fas fa-universal-access"></i>
                         </button>
                     </div>
 
@@ -4945,6 +5114,60 @@
                 <div class="bookmark-empty">No hay marcadores guardados</div>
             </div>
         </div>
+
+        <!-- Panel de Accesibilidad Visual -->
+        <div class="accessibility-panel" id="accessibility-panel">
+            <h4><i class="fas fa-universal-access"></i> Accesibilidad Visual</h4>
+            
+            <div class="acc-option-item">
+                <label>Filtros del Lector</label>
+                <div class="acc-buttons">
+                    <button class="acc-btn active" id="acc-filter-none" onclick="setVisualFilter('none')" aria-label="Sin filtro">
+                        Normal
+                    </button>
+                    <button class="acc-btn" id="acc-filter-contrast" onclick="setVisualFilter('contrast')" aria-label="Alto Contraste">
+                        <i class="fas fa-circle-half-stroke"></i> Alto Contraste
+                    </button>
+                    <button class="acc-btn" id="acc-filter-sepia" onclick="setVisualFilter('sepia')" aria-label="Filtro Sepia">
+                        <i class="fas fa-leaf"></i> Sepia
+                    </button>
+                    <button class="acc-btn" id="acc-filter-grayscale" onclick="setVisualFilter('grayscale')" aria-label="Escala de grises">
+                        <i class="fas fa-eye-low-vision"></i> Grises
+                    </button>
+                </div>
+            </div>
+
+            <div class="acc-option-item">
+                <label>Tamaño de Controles (UI)</label>
+                <div class="acc-buttons">
+                    <button class="acc-btn" onclick="changeUiScale(-0.1)" title="Reducir controles" aria-label="Reducir controles UI">
+                        <i class="fas fa-minus"></i> A-
+                    </button>
+                    <button class="acc-btn active" id="acc-ui-scale-default" onclick="changeUiScale(0, true)" aria-label="Escala por defecto">
+                        Por defecto (100%)
+                    </button>
+                    <button class="acc-btn" onclick="changeUiScale(0.1)" title="Aumentar controles" aria-label="Aumentar controles UI">
+                        <i class="fas fa-plus"></i> A+
+                    </button>
+                </div>
+            </div>
+
+            <div class="acc-option-item">
+                <label>Regla de Lectura</label>
+                <div class="acc-buttons">
+                    <button class="acc-btn" id="acc-ruler-btn" onclick="toggleReadingRuler()" aria-label="Activar o desactivar regla visual">
+                        <i class="fas fa-ruler-horizontal"></i> Mostrar Regla
+                    </button>
+                </div>
+            </div>
+            
+            <div style="font-size: 10px; color: var(--lumin-text-muted); line-height: 1.4; margin-top: 10px; border-top: 1px dashed rgba(253, 253, 150, 0.1); padding-top: 8px;">
+                <strong>Atajos rápidos:</strong> Alt+A (Panel) | Alt+H (Contraste) | Alt+R (Regla) | Alt+ / Alt- (Escala)
+            </div>
+        </div>
+
+        <!-- Regla de lectura visual -->
+        <div id="reading-ruler" class="reading-ruler"></div>
 
         <!-- Panel de Búsqueda -->
         <div class="bookmark-panel" id="search-panel" style="display: none; top: 90px; right: 20px; width: 300px; max-height: 420px; z-index: 200;">
@@ -5047,15 +5270,15 @@
         </div>
 
         <!-- Área de contenido -->
-        <div class="viewer-content-area" id="viewer-container"></div>
+        <div class="viewer-content-area" id="viewer-container" role="region" aria-label="Contenido de la novela" aria-live="polite"></div>
 
         <!-- Navegación lateral -->
-        <div class="side-nav side-nav-left" onclick="changePage(-1)" title="Página anterior (←)"></div>
-        <div class="side-nav side-nav-right" onclick="changePage(1)" title="Página siguiente (→)"></div>
+        <div class="side-nav side-nav-left" onclick="changePage(-1)" title="Página anterior (←)" role="button" aria-label="Página anterior"></div>
+        <div class="side-nav side-nav-right" onclick="changePage(1)" title="Página siguiente (→)" role="button" aria-label="Página siguiente"></div>
 
         <!-- Navegación vertical -->
-        <div class="vertical-nav vertical-nav-top" onclick="changePage(-1)" title="Página anterior (↑)"></div>
-        <div class="vertical-nav vertical-nav-bottom" onclick="changePage(1)" title="Página siguiente (↓)"></div>
+        <div class="vertical-nav vertical-nav-top" onclick="changePage(-1)" title="Página anterior (↑)" role="button" aria-label="Página anterior"></div>
+        <div class="vertical-nav vertical-nav-bottom" onclick="changePage(1)" title="Página siguiente (↓)" role="button" aria-label="Página siguiente"></div>
 
         <!-- Hint táctil -->
         <div class="touch-hint">
@@ -5458,8 +5681,14 @@
                         if (response.isValid) {
                             currentUser = {
                                 telegram: response.telegram,
+                                facebook: response.facebook,
                                 isAdmin: response.isAdmin || false,
-                                sessionToken: response.sessionToken
+                                sessionToken: response.sessionToken,
+                                permissions: response.permissions || {},
+                                permKey: response.permKey,
+                                email: response.email,
+                                facebookLink: response.facebookLink,
+                                fullData: response.fullData
                             };
                             localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
                             
@@ -5552,8 +5781,20 @@
                 const savedSession = localStorage.getItem('lumin_user_session');
                 if (savedSession) {
                     try {
-                        currentUser = JSON.parse(savedSession);
-                        console.log("[Lumin PWA] Sesión restaurada, saltando login...");
+                        const parsed = JSON.parse(savedSession);
+                        
+                        // Validar que la sesión tenga los campos mínimos requeridos
+                        if (!parsed.telegram || !parsed.sessionToken) {
+                            console.warn("[Lumin PWA] Sesión guardada inválida o incompleta, limpiando...");
+                            localStorage.removeItem('lumin_user_session');
+                            if (statusContainer) statusContainer.style.display = 'none';
+                            if (errorEl) errorEl.textContent = "Tu sesión anterior era incompleta. Por favor, abre el enlace de lectura desde el Bot de Telegram VIP.";
+                            switchView('login-section');
+                            return;
+                        }
+                        
+                        currentUser = parsed;
+                        console.log("[Lumin PWA] Sesión restaurada para:", currentUser.telegram);
                         loadLibrary();
                         
                         const urlParams = new URLSearchParams(window.location.search);
@@ -5566,8 +5807,9 @@
                         }
                     } catch(e) {
                         console.error("Error restaurando sesión:", e);
+                        localStorage.removeItem('lumin_user_session');
                         if (statusContainer) statusContainer.style.display = 'none';
-                        if (errorEl) errorEl.textContent = "Error al restaurar la sesión local.";
+                        if (errorEl) errorEl.textContent = "Error al restaurar la sesión local. Intenta acceder de nuevo desde el Bot.";
                         switchView('login-section');
                     }
                 } else {
@@ -7010,7 +7252,14 @@
                 if (hIconMobile) hIconMobile.className = 'fas fa-eye-slash';
             }
 
-            // 13. Resetear flag de apertura
+            // 13. Resetear panel de accesibilidad y estados visuales
+            const accPanel = document.getElementById('accessibility-panel');
+            if (accPanel) accPanel.style.display = 'none';
+            setVisualFilter('none');
+            changeUiScale(0, true);
+            if (isRulerActive) toggleReadingRuler();
+
+            // 14. Resetear flag de apertura
             isOpeningBook = false;
         }
 
@@ -7126,10 +7375,10 @@
                 fetchBookFromServer(fileId, operationId);
             }
 
-            function fetchBookFromServer(fileId, opId) {
+            function fetchBookFromServer(fileId, opId, retryCount = 0) {
                 if (opId !== _currentOperationId) { hideLoader(); isOpeningBook = false; return; }
                 
-                showLoader("Solicitando procesamiento en el servidor...");
+                showLoader(retryCount > 0 ? `Reintentando conexión (${retryCount}/3)...` : "Solicitando procesamiento en el servidor...");
                 const tgUser = currentUser ? currentUser.telegram : null;
                 const fbUser = currentUser ? (currentUser.facebookLink || currentUser.facebook) : null;
 
@@ -7140,6 +7389,7 @@
                         if (response && response.success && response.taskId) {
                             const taskId = response.taskId;
                             let pollCount = 0;
+                            let pollRetries = 0;
                             
                             const pollNext = () => {
                                 if (opId !== _currentOperationId) return;
@@ -7173,7 +7423,15 @@
                                             alert("Error de sesión o permisos: " + err);
                                         } else {
                                             console.warn("Fallo de red en polling: " + err);
-                                            setTimeout(pollNext, 3000);
+                                            pollRetries++;
+                                            if (pollRetries <= 3) {
+                                                console.log(`Reintentando polling (${pollRetries}/3)...`);
+                                                setTimeout(pollNext, 2000 * pollRetries);
+                                            } else {
+                                                hideLoader();
+                                                isOpeningBook = false;
+                                                alert("Error de conexión al procesar la novela: " + err);
+                                            }
                                         }
                                     })
                                     .pollProcessedBook(taskId);
@@ -7187,9 +7445,19 @@
                         }
                     })
                     .withFailureHandler(err => {
-                        hideLoader();
-                        isOpeningBook = false;
-                        alert("Error crítico de red o procesamiento: " + err);
+                        if (opId !== _currentOperationId) return;
+                        console.warn(`Error de red al solicitar procesamiento (intento ${retryCount}/3):`, err);
+                        
+                        if (retryCount < 3) {
+                            const delay = Math.pow(2, retryCount) * 1500;
+                            setTimeout(() => {
+                                fetchBookFromServer(fileId, opId, retryCount + 1);
+                            }, delay);
+                        } else {
+                            hideLoader();
+                            isOpeningBook = false;
+                            alert("Error crítico de red o procesamiento: " + err + "\n\nPor favor, verifica tu conexión a internet o recarga la página.");
+                        }
                     })
                     .getProcessedBook(fileId, tgUser, fbUser);
             }
@@ -9369,6 +9637,213 @@
             currentUISettings.docCustomHeight = h;
             setDocumentSize('custom');
         }
+
+        // === FUNCIONES JS DE ACCESIBILIDAD ===
+        let currentVisualFilter = 'none';
+        let currentUiScale = 1.0;
+        let isRulerActive = false;
+
+        function toggleAccessibilityPanel() {
+            const panel = document.getElementById('accessibility-panel');
+            if (!panel) return;
+            
+            // Cerrar otros paneles para evitar superposición
+            const bookmarkPanel = document.getElementById('bookmark-panel');
+            if (bookmarkPanel) bookmarkPanel.classList.remove('active');
+            const searchPanel = document.getElementById('search-panel');
+            if (searchPanel) searchPanel.style.display = 'none';
+            
+            panel.classList.toggle('active');
+        }
+
+        function setVisualFilter(filterType) {
+            const container = document.getElementById('viewer-container');
+            if (!container) return;
+
+            // Limpiar clases de filtro
+            container.classList.remove('pdf-filter-contrast', 'pdf-filter-sepia', 'pdf-filter-grayscale');
+            
+            // Remover estado activo de botones
+            document.querySelectorAll('#accessibility-panel .acc-btn').forEach(btn => {
+                if (btn.id && btn.id.startsWith('acc-filter-')) {
+                    btn.classList.remove('active');
+                }
+            });
+
+            currentVisualFilter = filterType;
+            
+            if (filterType !== 'none') {
+                container.classList.add(`pdf-filter-${filterType}`);
+                const activeBtn = document.getElementById(`acc-filter-${filterType}`);
+                if (activeBtn) activeBtn.classList.add('active');
+            } else {
+                const noneBtn = document.getElementById('acc-filter-none');
+                if (noneBtn) noneBtn.classList.add('active');
+            }
+
+            // Anunciar cambio a lectores de pantalla
+            const message = filterType === 'none' ? "Filtro visual desactivado" : `Filtro visual ${filterType} activado`;
+            announceAccessibilityChange(message);
+        }
+
+        function changeUiScale(amount, reset = false) {
+            if (reset) {
+                currentUiScale = 1.0;
+            } else {
+                currentUiScale = Math.max(0.7, Math.min(1.5, currentUiScale + amount));
+            }
+
+            document.documentElement.style.setProperty('--ui-scale-factor', currentUiScale);
+            
+            // Aplicar escala a elementos UI principales multiplicando variables internas o escalando via transform
+            const scaleTargets = ['.library-navbar', '.viewer-header', '.bookmark-panel', '.audio-panel', '.accessibility-panel'];
+            scaleTargets.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => {
+                    if (currentUiScale === 1.0) {
+                        el.style.transform = '';
+                    } else {
+                        // En móviles y tablets, limitar la escala de transform para que no desborde de la pantalla
+                        const scale = window.innerWidth < 768 ? Math.min(1.15, currentUiScale) : currentUiScale;
+                        el.style.transform = `scale(${scale})`;
+                    }
+                });
+            });
+
+            // Actualizar botones de escala activa
+            const defaultBtn = document.getElementById('acc-ui-scale-default');
+            if (defaultBtn) {
+                if (currentUiScale === 1.0) {
+                    defaultBtn.classList.add('active');
+                    defaultBtn.textContent = 'Por defecto (100%)';
+                } else {
+                    defaultBtn.classList.remove('active');
+                    defaultBtn.textContent = `${Math.round(currentUiScale * 100)}%`;
+                }
+            }
+
+            announceAccessibilityChange(`Escala de interfaz cambiada al ${Math.round(currentUiScale * 100)} por ciento`);
+        }
+
+        function toggleReadingRuler() {
+            const ruler = document.getElementById('reading-ruler');
+            const btn = document.getElementById('acc-ruler-btn');
+            if (!ruler || !btn) return;
+
+            isRulerActive = !isRulerActive;
+            
+            if (isRulerActive) {
+                ruler.style.display = 'block';
+                // Posicionar inicialmente en el centro del visor
+                const container = document.getElementById('viewer-container');
+                if (container) {
+                    const rect = container.getBoundingClientRect();
+                    ruler.style.top = `${rect.top + rect.height / 2}px`;
+                }
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-ruler-horizontal"></i> Ocultar Regla';
+                
+                // Inicializar eventos de drag
+                setupRulerDrag();
+                announceAccessibilityChange("Regla de lectura activada. Puedes arrastrarla verticalmente.");
+            } else {
+                ruler.style.display = 'none';
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fas fa-ruler-horizontal"></i> Mostrar Regla';
+                announceAccessibilityChange("Regla de lectura desactivada.");
+            }
+        }
+
+        function setupRulerDrag() {
+            const ruler = document.getElementById('reading-ruler');
+            if (!ruler) return;
+
+            let isDragging = false;
+
+            const onStart = (e) => {
+                isDragging = true;
+                ruler.style.opacity = '0.95';
+                e.preventDefault();
+            };
+
+            const onMove = (e) => {
+                if (!isDragging) return;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                // Mantener dentro del rango vertical visible
+                ruler.style.top = `${clientY}px`;
+            };
+
+            const onEnd = () => {
+                isDragging = false;
+                ruler.style.opacity = '0.65';
+            };
+
+            // Eventos Mouse
+            ruler.addEventListener('mousedown', onStart);
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+
+            // Eventos Touch (iOS y Android)
+            ruler.addEventListener('touchstart', onStart, { passive: false });
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+
+        // Setup atajos de teclado globales (Alt + Tecla)
+        function setupAccessibilityKeys() {
+            document.addEventListener('keydown', (e) => {
+                // Verificar que no se esté escribiendo en un input
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                if (e.altKey) {
+                    switch (e.key.toLowerCase()) {
+                        case 'a': // Alt + A: Abrir panel accesibilidad
+                            e.preventDefault();
+                            toggleAccessibilityPanel();
+                            break;
+                        case 'h': // Alt + H: Rotar filtros de contraste
+                            e.preventDefault();
+                            const filters = ['none', 'contrast', 'sepia', 'grayscale'];
+                            const nextIndex = (filters.indexOf(currentVisualFilter) + 1) % filters.length;
+                            setVisualFilter(filters[nextIndex]);
+                            break;
+                        case 'r': // Alt + R: Regla de lectura
+                            e.preventDefault();
+                            toggleReadingRuler();
+                            break;
+                        case '+': // Alt + +: Aumentar UI
+                        case '=':
+                            e.preventDefault();
+                            changeUiScale(0.1);
+                            break;
+                        case '-': // Alt + -: Reducir UI
+                            e.preventDefault();
+                            changeUiScale(-0.1);
+                            break;
+                    }
+                }
+            });
+        }
+
+        // Anunciar cambios de forma audible a través de ARIA Live region invisible
+        function announceAccessibilityChange(text) {
+            let liveRegion = document.getElementById('aria-live-announcer');
+            if (!liveRegion) {
+                liveRegion = document.createElement('div');
+                liveRegion.id = 'aria-live-announcer';
+                liveRegion.setAttribute('aria-live', 'polite');
+                liveRegion.setAttribute('aria-atomic', 'true');
+                liveRegion.style.cssText = 'position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;';
+                document.body.appendChild(liveRegion);
+            }
+            liveRegion.textContent = '';
+            setTimeout(() => { liveRegion.textContent = text; }, 50);
+        }
+
+        // Inicializar atajos de accesibilidad al cargar
+        document.addEventListener('DOMContentLoaded', setupAccessibilityKeys);
 
     </script>
     
