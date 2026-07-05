@@ -2318,6 +2318,11 @@
         }
 
         /* Modos de filtro aplicados al canvas PDF */
+        .pdf-filter-invert canvas {
+            filter: invert(1) !important;
+            background: #000 !important;
+        }
+
         .pdf-filter-contrast canvas {
             filter: invert(1) hue-rotate(180deg) contrast(1.15) brightness(0.95) !important;
             background: #000 !important;
@@ -5124,6 +5129,9 @@
                 <div class="acc-buttons">
                     <button class="acc-btn active" id="acc-filter-none" onclick="setVisualFilter('none')" aria-label="Sin filtro">
                         Normal
+                    </button>
+                    <button class="acc-btn" id="acc-filter-invert" onclick="setVisualFilter('invert')" aria-label="Invertir colores del PDF">
+                        <i class="fas fa-arrows-spin"></i> Invertir
                     </button>
                     <button class="acc-btn" id="acc-filter-contrast" onclick="setVisualFilter('contrast')" aria-label="Alto Contraste">
                         <i class="fas fa-circle-half-stroke"></i> Alto Contraste
@@ -9663,7 +9671,7 @@
             if (!container) return;
 
             // Limpiar clases de filtro
-            container.classList.remove('pdf-filter-contrast', 'pdf-filter-sepia', 'pdf-filter-grayscale');
+            container.classList.remove('pdf-filter-contrast', 'pdf-filter-sepia', 'pdf-filter-grayscale', 'pdf-filter-invert');
             
             // Remover estado activo de botones
             document.querySelectorAll('#accessibility-panel .acc-btn').forEach(btn => {
@@ -9807,7 +9815,7 @@
                             break;
                         case 'h': // Alt + H: Rotar filtros de contraste
                             e.preventDefault();
-                            const filters = ['none', 'contrast', 'sepia', 'grayscale'];
+                            const filters = ['none', 'invert', 'contrast', 'sepia', 'grayscale'];
                             const nextIndex = (filters.indexOf(currentVisualFilter) + 1) % filters.length;
                             setVisualFilter(filters[nextIndex]);
                             break;
