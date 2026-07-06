@@ -1643,6 +1643,47 @@
             margin: 0 4px;
         }
 
+        /* Custom range styles for premium look */
+        .zoom-slider-input {
+            width: 80px;
+            accent-color: var(--lumin-yellow);
+            cursor: pointer;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .zoom-slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--lumin-yellow);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--lumin-yellow);
+            border: 2px solid var(--lumin-black);
+            transition: transform 0.1s ease;
+        }
+        .zoom-slider-input::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        .zoom-slider-input::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--lumin-yellow);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--lumin-yellow);
+            border: 2px solid var(--lumin-black);
+            transition: transform 0.1s ease;
+        }
+        .zoom-slider-input::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
         /* Header en móvil */
         .viewer-header-mobile {
             display: none;
@@ -5008,10 +5049,11 @@
 
                     <!-- Grupo: Zoom -->
                     <div class="control-group" role="group" aria-label="Zoom del documento">
-                        <button onclick="changeZoom(-0.2)" class="pixel-button secondary icon-only" title="Alejar" aria-label="Reducir zoom">
+                        <button onclick="changeZoom(-0.1)" class="pixel-button secondary icon-only" title="Alejar" aria-label="Reducir zoom">
                             <i class="fas fa-minus"></i>
                         </button>
-                        <button onclick="changeZoom(0.2)" class="pixel-button secondary icon-only" title="Acercar" aria-label="Aumentar zoom">
+                        <input type="range" id="zoom-slider" class="zoom-slider-input" min="0.5" max="3.0" step="0.1" value="1.5" oninput="onZoomSliderInput(this.value)">
+                        <button onclick="changeZoom(0.1)" class="pixel-button secondary icon-only" title="Acercar" aria-label="Aumentar zoom">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -5091,10 +5133,11 @@
 
                     <!-- Zoom -->
                     <div class="control-group">
-                        <button onclick="changeZoom(-0.2)" class="pixel-button secondary icon-only" title="Alejar">
+                        <button onclick="changeZoom(-0.1)" class="pixel-button secondary icon-only" title="Alejar">
                             <i class="fas fa-minus"></i>
                         </button>
-                        <button onclick="changeZoom(0.2)" class="pixel-button secondary icon-only" title="Acercar">
+                        <input type="range" id="zoom-slider-mobile" class="zoom-slider-input" min="0.5" max="3.0" step="0.1" value="1.5" oninput="onZoomSliderInput(this.value)" style="width: 50px;">
+                        <button onclick="changeZoom(0.1)" class="pixel-button secondary icon-only" title="Acercar">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -7257,6 +7300,7 @@
 
             // 10. Resetear escala
             currentScale = 1.5;
+            syncZoomSliders(1.5);
 
             // 11. Resetear scroll mode
             if (isScrollMode) {
@@ -7753,7 +7797,7 @@
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d', { alpha: false });
 
-                const dpr = window.devicePixelRatio || 1;
+                const dpr = Math.min(1.5, window.devicePixelRatio || 1);
                 canvas.width = viewport.width * dpr;
                 canvas.height = viewport.height * dpr;
                 
@@ -7783,7 +7827,7 @@
                 canvas.className = animClass;
 
                 ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
+                ctx.imageSmoothingQuality = 'medium';
 
                 await page.render({
                     canvasContext: ctx,
@@ -7869,7 +7913,7 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d', { alpha: false });
 
-            const dpr = window.devicePixelRatio || 1;
+            const dpr = Math.min(1.5, window.devicePixelRatio || 1);
             canvas.width = viewport.width * dpr;
             canvas.height = viewport.height * dpr;
             
@@ -7890,7 +7934,7 @@
             canvas.className = 'page-canvas page-flip-animation';
 
             ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
+            ctx.imageSmoothingQuality = 'medium';
 
             await page.render({
                 canvasContext: ctx,
@@ -7993,7 +8037,7 @@
                 }
 
                 ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
+                ctx.imageSmoothingQuality = 'medium';
 
                 if (!isScrollMode || !document.getElementById('scroll-page-' + num)) return;
 
@@ -8177,13 +8221,63 @@
             }
         }
 
+        let zoomTimeout = null;
+
+        function syncZoomSliders(scale) {
+            const sd = document.getElementById('zoom-slider');
+            const sm = document.getElementById('zoom-slider-mobile');
+            const valStr = parseFloat(scale).toFixed(1);
+            if (sd) sd.value = valStr;
+            if (sm) sm.value = valStr;
+        }
+
+        function applyFastZoom(scale) {
+            const factor = scale / 1.5;
+            const canvases = document.querySelectorAll('.page-canvas');
+            canvases.forEach(canvas => {
+                let baseWidth = parseFloat(canvas.dataset.baseWidth);
+                let baseHeight = parseFloat(canvas.dataset.baseHeight);
+                if (!baseWidth) {
+                    baseWidth = parseFloat(canvas.style.width) || canvas.width / (window.devicePixelRatio || 1);
+                    baseHeight = parseFloat(canvas.style.height) || canvas.height / (window.devicePixelRatio || 1);
+                    canvas.dataset.baseWidth = baseWidth;
+                    canvas.dataset.baseHeight = baseHeight;
+                }
+                const newWidth = baseWidth * factor;
+                const newHeight = baseHeight * factor;
+                canvas.style.setProperty('width', `${newWidth}px`, 'important');
+                canvas.style.setProperty('height', `${newHeight}px`, 'important');
+                canvas.style.setProperty('max-width', 'none', 'important');
+                canvas.style.setProperty('max-height', 'none', 'important');
+            });
+        }
+
+        function onZoomSliderInput(value) {
+            if (!pdfDoc) return;
+            currentScale = parseFloat(value);
+            syncZoomSliders(currentScale);
+            applyFastZoom(currentScale);
+
+            if (zoomTimeout) clearTimeout(zoomTimeout);
+            zoomTimeout = setTimeout(() => {
+                renderPage(pageNum);
+            }, 300);
+        }
+
         function changeZoom(delta) {
             if (!pdfDoc) return;
-            currentScale += delta;
-            if (currentScale < 0.5) currentScale = 0.5;
-            if (currentScale > 4.0) currentScale = 4.0;
+            let newScale = currentScale + delta;
+            if (newScale < 0.5) newScale = 0.5;
+            if (newScale > 3.0) newScale = 3.0;
+            currentScale = parseFloat(newScale.toFixed(1));
+            
+            syncZoomSliders(currentScale);
+            applyFastZoom(currentScale);
 
-            renderPage(pageNum);
+            if (zoomTimeout) clearTimeout(zoomTimeout);
+            zoomTimeout = setTimeout(() => {
+                renderPage(pageNum);
+            }, 300);
         }
 
         function goBackToLibrary() {
@@ -8313,6 +8407,7 @@
         }
 
         function handleSwipe() {
+            if (currentScale > 1.55) return;
             const swipeThreshold = 50;
             if (isScrollMode) {
                 const diffY = touchStartY - touchEndY;
