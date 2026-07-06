@@ -2367,11 +2367,17 @@
             padding: 20px;
             z-index: 200;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(253, 253, 150, 0.15);
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease, visibility 0.4s ease;
         }
 
         .audio-panel.active {
             transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+            visibility: visible;
         }
 
         .audio-panel-header {
@@ -6102,10 +6108,20 @@
             _searchTimeout = setTimeout(filterBooks, 300);
         }
 
-        function filterBooks() {
-            const query = document.getElementById('site-search').value.toLowerCase().trim();
+        function normalizeSearchText(text) {
+            if (!text) return "";
+            return text.toLowerCase()
+                       .normalize("NFD")
+                       .replace(/[\u0300-\u036f]/g, "")
+                       .replace(/\s+/g, " ")
+                       .trim();
+        }
 
-            if (query.length === 0) {
+        function filterBooks() {
+            const query = document.getElementById('site-search').value;
+            const queryNorm = normalizeSearchText(query);
+
+            if (queryNorm.length === 0) {
                 filteredBooks = [...allBooks];
                 currentBookIndex = 0;
                 document.getElementById('books-grid').classList.remove('active');
@@ -6113,7 +6129,7 @@
                 document.getElementById('carousel-counter').style.display = 'block';
                 renderCarousel();
             } else {
-                const filtered = allBooks.filter(b => b.name.toLowerCase().includes(query));
+                const filtered = allBooks.filter(b => normalizeSearchText(b.name).includes(queryNorm));
                 filteredBooks = filtered;
                 currentBookIndex = 0;
                 renderLibrary(filtered);
@@ -7740,14 +7756,19 @@
                 const dpr = window.devicePixelRatio || 1;
                 canvas.width = viewport.width * dpr;
                 canvas.height = viewport.height * dpr;
-                canvas.style.width = `${viewport.width}px`;
-                canvas.style.height = `${viewport.height}px`;
                 
                 if (currentScale === 1.5) {
+                    canvas.style.removeProperty('width');
+                    canvas.style.removeProperty('height');
+                    canvas.style.removeProperty('max-width');
+                    canvas.style.removeProperty('max-height');
                     canvas.style.maxWidth = 'min(95vw, 850px)';
                     canvas.style.height = 'auto';
                 } else {
-                    canvas.style.maxWidth = 'none';
+                    canvas.style.setProperty('width', `${viewport.width}px`, 'important');
+                    canvas.style.setProperty('height', `${viewport.height}px`, 'important');
+                    canvas.style.setProperty('max-width', 'none', 'important');
+                    canvas.style.setProperty('max-height', 'none', 'important');
                 }
                 
                 // Determinar dirección de animación vertical
@@ -7851,14 +7872,19 @@
             const dpr = window.devicePixelRatio || 1;
             canvas.width = viewport.width * dpr;
             canvas.height = viewport.height * dpr;
-            canvas.style.width = `${viewport.width}px`;
-            canvas.style.height = `${viewport.height}px`;
             
             if (currentScale === 1.5) {
+                canvas.style.removeProperty('width');
+                canvas.style.removeProperty('height');
+                canvas.style.removeProperty('max-width');
+                canvas.style.removeProperty('max-height');
                 canvas.style.maxWidth = 'min(95vw, 850px)';
                 canvas.style.height = 'auto';
             } else {
-                canvas.style.maxWidth = 'none';
+                canvas.style.setProperty('width', `${viewport.width}px`, 'important');
+                canvas.style.setProperty('height', `${viewport.height}px`, 'important');
+                canvas.style.setProperty('max-width', 'none', 'important');
+                canvas.style.setProperty('max-height', 'none', 'important');
             }
             
             canvas.className = 'page-canvas page-flip-animation';
@@ -7953,6 +7979,18 @@
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
                 canvas.className = 'page-canvas';
+                
+                if (currentScale === 1.5) {
+                    canvas.style.removeProperty('width');
+                    canvas.style.removeProperty('height');
+                    canvas.style.removeProperty('max-width');
+                    canvas.style.removeProperty('max-height');
+                } else {
+                    canvas.style.setProperty('width', `${viewport.width}px`, 'important');
+                    canvas.style.setProperty('height', `${viewport.height}px`, 'important');
+                    canvas.style.setProperty('max-width', 'none', 'important');
+                    canvas.style.setProperty('max-height', 'none', 'important');
+                }
 
                 ctx.imageSmoothingEnabled = true;
                 ctx.imageSmoothingQuality = 'high';
