@@ -2009,6 +2009,13 @@
             opacity: 1;
         }
 
+        /* Disable side navigation panels when zoomed in */
+        body.is-zoomed .side-nav,
+        body.is-zoomed .vertical-nav {
+            pointer-events: none !important;
+            opacity: 0 !important;
+        }
+
         /* === NAVEGACIÓN LATERAL === */
         .side-nav {
             position: fixed;
@@ -5062,14 +5069,14 @@
 
                     <!-- Grupo: Navegación -->
                     <div class="control-group" id="page-nav-group" role="group" aria-label="Navegación de páginas">
-                        <button onclick="changePage(-1)" class="pixel-button secondary icon-only"
+                        <button onclick="changePage(-1, true)" class="pixel-button secondary icon-only"
                             title="Página anterior" aria-label="Ir a la página anterior">
                             <i class="fas fa-chevron-left"></i>
                         </button>
                         <input type="number" id="page-input" class="control-input" value="1" min="1"
                             onchange="jumpToPage(this.value)" aria-label="Número de página actual">
                         <span class="page-indicator">/ <span id="page-count">?</span></span>
-                        <button onclick="changePage(1)" class="pixel-button secondary icon-only"
+                        <button onclick="changePage(1, true)" class="pixel-button secondary icon-only"
                             title="Página siguiente" aria-label="Ir a la página siguiente">
                             <i class="fas fa-chevron-right"></i>
                         </button>
@@ -5144,13 +5151,13 @@
 
                     <!-- Navegación (solo en modo página) -->
                     <div class="control-group" id="page-nav-group-mobile">
-                        <button onclick="changePage(-1)" class="pixel-button secondary icon-only">
+                        <button onclick="changePage(-1, true)" class="pixel-button secondary icon-only">
                             <i class="fas fa-chevron-left"></i>
                         </button>
                         <input type="number" id="page-input-mobile" class="control-input" value="1" min="1"
                             onchange="jumpToPage(this.value)">
                         <span class="page-indicator">/ <span id="page-count-mobile">?</span></span>
-                        <button onclick="changePage(1)" class="pixel-button secondary icon-only">
+                        <button onclick="changePage(1, true)" class="pixel-button secondary icon-only">
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
@@ -5351,14 +5358,13 @@
             Toca los bordes para navegar • Desliza para cambiar página
         </div>
 
-        <!-- Barra de navegación flotante para modo scroll -->
         <div id="scroll-navigator" class="scroll-navigator-capsule" style="display: none;">
-            <button class="scroll-nav-btn" onclick="changePage(-1)" title="Página Anterior">
+             <button class="scroll-nav-btn" onclick="changePage(-1, true)" title="Página Anterior">
                 <i class="fas fa-chevron-left"></i>
             </button>
             <input type="range" id="scroll-page-slider" class="scroll-nav-slider" min="1" max="100" value="1" oninput="onScrollSliderInput(this.value)" onchange="onScrollSliderChange(this.value)">
             <span id="scroll-page-indicator" class="scroll-nav-indicator">1 / 100</span>
-            <button class="scroll-nav-btn" onclick="changePage(1)" title="Página Siguiente">
+            <button class="scroll-nav-btn" onclick="changePage(1, true)" title="Página Siguiente">
                 <i class="fas fa-chevron-right"></i>
             </button>
         </div>
@@ -7301,6 +7307,7 @@
             // 10. Resetear escala
             currentScale = 1.5;
             syncZoomSliders(1.5);
+            updateZoomClass(1.5);
 
             // 11. Resetear scroll mode
             if (isScrollMode) {
@@ -8061,8 +8068,9 @@
         }
 
 
-        function changePage(delta) {
+        function changePage(delta, force = false) {
             if (!pdfDoc) return;
+            if (currentScale > 1.55 && !force) return;
             const newPage = pageNum + delta;
             if (newPage >= 1 && newPage <= pdfDoc.numPages) {
                 pageNum = newPage;
@@ -8252,11 +8260,20 @@
             });
         }
 
+        function updateZoomClass(scale) {
+            if (scale > 1.55) {
+                document.body.classList.add('is-zoomed');
+            } else {
+                document.body.classList.remove('is-zoomed');
+            }
+        }
+
         function onZoomSliderInput(value) {
             if (!pdfDoc) return;
             currentScale = parseFloat(value);
             syncZoomSliders(currentScale);
             applyFastZoom(currentScale);
+            updateZoomClass(currentScale);
 
             if (zoomTimeout) clearTimeout(zoomTimeout);
             zoomTimeout = setTimeout(() => {
@@ -8273,6 +8290,7 @@
             
             syncZoomSliders(currentScale);
             applyFastZoom(currentScale);
+            updateZoomClass(currentScale);
 
             if (zoomTimeout) clearTimeout(zoomTimeout);
             zoomTimeout = setTimeout(() => {
