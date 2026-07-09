@@ -5767,7 +5767,8 @@
                 google.script.run
                     .withSuccessHandler(response => {
                         hideLoader();
-                        console.log("[Lumin PWA] Versión del servidor detectada:", response.serverVersion || "Antigua (sin versión)");
+                        console.log("[Lumin PWA] Versión del servidor:", response.serverVersion || "Antigua");
+                        console.log("[Lumin PWA] Depuración de Dispositivo:", response.deviceDebug || "No disponible");
                         
                         if (response.isValid) {
                             // Guardar la llave de acceso en localStorage para futuras aperturas
@@ -10126,7 +10127,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
+                navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
                     .then(registration => {
                         console.log('Lumin VIP ServiceWorker registrado con éxito:', registration.scope);
                         
