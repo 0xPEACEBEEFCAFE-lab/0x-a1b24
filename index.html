@@ -26,6 +26,18 @@
             console.error('GAS_BACKEND_URL no ha sido inyectada. Verifica el secreto GAS_URL en GitHub Actions.');
         }
         
+        // Identificador de dispositivo único generado globalmente al cargar la app
+        let globalDeviceId = '';
+        try {
+            globalDeviceId = localStorage.getItem('lumin_device_id');
+            if (!globalDeviceId) {
+                globalDeviceId = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('lumin_device_id', globalDeviceId);
+            }
+        } catch (e) {
+            console.warn("localStorage no disponible, usando ID temporal.", e);
+            globalDeviceId = 'temp_dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
         
         window.google = window.google || {};
         window.google.script = window.google.script || {};
@@ -95,6 +107,7 @@
                             action: prop,
                             args: cleanArgs,
                             sessionToken: currentUser ? currentUser.sessionToken : null,
+                            deviceId: globalDeviceId,
                             origin_url: window.location.origin
                         }),
                         signal: controller.signal
@@ -5703,18 +5716,8 @@
             const initBookId = initUrlParams.get('bookId');
             const initBookName = initUrlParams.get('bookName');
 
-            // Generar o recuperar ID de dispositivo único para enlace exclusivo con try-catch
-            let deviceId = '';
-            try {
-                deviceId = localStorage.getItem('lumin_device_id');
-                if (!deviceId) {
-                    deviceId = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-                    localStorage.setItem('lumin_device_id', deviceId);
-                }
-            } catch (e) {
-                console.warn("localStorage no disponible, usando ID temporal.", e);
-                deviceId = 'temp_dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            }
+            // Usar el ID de dispositivo único generado globalmente
+            const deviceId = globalDeviceId;
 
             const statusContainer = document.getElementById('login-status-container');
             const errorEl = document.getElementById('login-error');
@@ -5849,7 +5852,7 @@
                         if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
-                    .validateViaTelegramWebApp(initData);
+                    .validateViaTelegramWebApp(initData, globalDeviceId);
             } else {
                 const savedSession = localStorage.getItem('lumin_user_session');
                 if (savedSession) {
@@ -5945,7 +5948,7 @@
                     hideLoader();
                     document.getElementById('login-error').textContent = "Error de conexión: " + err;
                 })
-                .validateUser(tg, fb);
+                .validateUser(tg, fb, globalDeviceId);
         }
 
         // === LIBRERÍA ===
