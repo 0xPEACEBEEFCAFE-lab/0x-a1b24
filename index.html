@@ -39,23 +39,26 @@
 
                 if (prop === 'withSuccessHandler') {
                     return function(callback) {
-                        target._successCallback = callback;
-                        return new Proxy(target, gasProxyHandler);
+                        // Crear contexto AISLADO por cadena de llamada para evitar race conditions
+                        const ctx = Object.create(target);
+                        ctx._successCallback = callback;
+                        ctx._failureCallback = target._failureCallback || null;
+                        return new Proxy(ctx, gasProxyHandler);
                     };
                 }
                 if (prop === 'withFailureHandler') {
                     return function(callback) {
-                        target._failureCallback = callback;
-                        return new Proxy(target, gasProxyHandler);
+                        const ctx = Object.create(target);
+                        ctx._successCallback = target._successCallback || null;
+                        ctx._failureCallback = callback;
+                        return new Proxy(ctx, gasProxyHandler);
                     };
                 }
                 
                 return function(...args) {
+                    // Capturar callbacks de ESTE contexto aislado
                     const successCb = target._successCallback;
                     const failureCb = target._failureCallback;
-                    
-                    target._successCallback = null;
-                    target._failureCallback = null;
 
                     // Si hay objetos del DOM (formularios) en args, GAS normalmente los serializa,
                     // como no tenemos el motor de Google, extraemos los valores de form
@@ -69,8 +72,6 @@
                         return arg;
                     });
 
-
-
                     // Si no tenemos URL de backend, evitamos hacer la petición a "undefined"
                     if (!GAS_BACKEND_URL) {
                         const errorMsg = "Configuración incompleta: GAS_BACKEND_URL no está definido. Revisa la configuración de despliegue en GitHub Pages.";
@@ -79,9 +80,9 @@
                         return;
                     }
 
-                    // Configurar un timeout de 15 segundos para el API Fetch (crucial para móviles iOS/Android)
+                    // Configurar un timeout de 90 segundos para el API Fetch (crucial para móviles iOS/Android y descargas grandes)
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
                     fetch(GAS_BACKEND_URL, {
                         method: "POST",
@@ -1650,6 +1651,7 @@
             cursor: pointer;
             height: 6px;
             -webkit-appearance: none;
+            appearance: none;
             background: rgba(255, 255, 255, 0.15);
             border-radius: 3px;
             outline: none;
@@ -7473,11 +7475,21 @@
                             const taskId = response.taskId;
                             let pollCount = 0;
                             let pollRetries = 0;
+                            const MAX_POLL_ATTEMPTS = 60; // ~3 minutos (60 × 3s)
                             
                             const pollNext = () => {
                                 if (opId !== _currentOperationId) return;
                                 
                                 pollCount++;
+                                
+                                // Protección: si el servidor nunca termina, no pollear indefinidamente
+                                if (pollCount > MAX_POLL_ATTEMPTS) {
+                                    hideLoader();
+                                    isOpeningBook = false;
+                                    alert("El servidor tardó demasiado en procesar la novela. Por favor, intenta de nuevo en unos minutos.");
+                                    return;
+                                }
+                                
                                 let prog = Math.min(95, pollCount * 5);
                                 showLoader(`Procesando seguridad en servidor (${prog}%)...`);
                                 
@@ -7507,8 +7519,8 @@
                                         } else {
                                             console.warn("Fallo de red en polling: " + err);
                                             pollRetries++;
-                                            if (pollRetries <= 3) {
-                                                console.log(`Reintentando polling (${pollRetries}/3)...`);
+                                            if (pollRetries <= 5) {
+                                                console.log(`Reintentando polling (${pollRetries}/5)...`);
                                                 setTimeout(pollNext, 2000 * pollRetries);
                                             } else {
                                                 hideLoader();
