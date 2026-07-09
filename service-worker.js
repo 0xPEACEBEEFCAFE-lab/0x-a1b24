@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lumin-vip-v4';
+const CACHE_NAME = 'lumin-vip-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
