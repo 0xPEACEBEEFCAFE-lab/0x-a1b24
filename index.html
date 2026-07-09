@@ -5767,6 +5767,8 @@
                 google.script.run
                     .withSuccessHandler(response => {
                         hideLoader();
+                        console.log("[Lumin PWA] Versión del servidor detectada:", response.serverVersion || "Antigua (sin versión)");
+                        
                         if (response.isValid) {
                             // Guardar la llave de acceso en localStorage para futuras aperturas
                             if (response.accessKey) {
