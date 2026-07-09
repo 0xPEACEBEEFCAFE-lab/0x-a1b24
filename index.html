@@ -5757,6 +5757,9 @@
                     }
                 }
 
+                // Leer la llave de acceso guardada en este navegador (si existe)
+                const storedAccessKey = localStorage.getItem('lumin_ak_' + initOfflineToken) || '';
+
                 if (statusContainer) statusContainer.style.display = 'block';
                 if (errorEl) errorEl.textContent = '';
                 showLoader("Validando acceso seguro...");
@@ -5765,6 +5768,11 @@
                     .withSuccessHandler(response => {
                         hideLoader();
                         if (response.isValid) {
+                            // Guardar la llave de acceso en localStorage para futuras aperturas
+                            if (response.accessKey) {
+                                localStorage.setItem('lumin_ak_' + initOfflineToken, response.accessKey);
+                            }
+
                             currentUser = {
                                 telegram: response.telegram,
                                 facebook: response.facebook,
@@ -5798,7 +5806,7 @@
                     })
                     .withFailureHandler(err => {
                         hideLoader();
-                        // Intentar recuperar sesión guardada como fallback si falla la red (por ejemplo, failed to fetch)
+                        // Intentar recuperar sesión guardada como fallback si falla la red
                         const savedSession = localStorage.getItem('lumin_user_session');
                         if (savedSession) {
                             try {
@@ -5819,7 +5827,7 @@
                         if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
-                    .validateOfflineToken(initOfflineToken, deviceId, navigator.userAgent);
+                    .validateOfflineToken(initOfflineToken, deviceId, navigator.userAgent, storedAccessKey);
                 return;
             }
 
