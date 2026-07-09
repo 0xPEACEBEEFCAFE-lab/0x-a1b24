@@ -39,6 +39,16 @@
             globalDeviceId = 'temp_dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         }
         
+        // SEGURIDAD EXTRA: Concatenar huella de hardware (resolución + zona horaria)
+        // Esto previene que una sesión clonada o sincronizada en la nube funcione entre PC y Teléfono.
+        try {
+            const screenInfo = `${window.screen.width}x${window.screen.height}`;
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown';
+            globalDeviceId = `${globalDeviceId}_${screenInfo}_${tz}`.replace(/[^a-zA-Z0-9_\-]/g, '');
+        } catch (e) {
+            console.warn("No se pudo generar la huella de hardware", e);
+        }
+        
         window.google = window.google || {};
         window.google.script = window.google.script || {};
         
@@ -10109,10 +10119,34 @@
                 navigator.serviceWorker.register('./service-worker.js')
                     .then(registration => {
                         console.log('Lumin VIP ServiceWorker registrado con éxito:', registration.scope);
+                        
+                        // Buscar actualizaciones activamente al cargar
+                        registration.update();
+                        
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        console.log('[Lumin SW] Nueva versión disponible. Recargando...');
+                                    }
+                                });
+                            }
+                        });
                     })
                     .catch(error => {
                         console.error('Inscripción de ServiceWorker fallida:', error);
                     });
+            });
+
+            // Recargar la página automáticamente cuando el nuevo Service Worker toma el control (skipWaiting/claim)
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    console.log('[Lumin SW] El Service Worker ha cambiado. Recargando la aplicación...');
+                    window.location.reload();
+                }
             });
         }
     </script>
