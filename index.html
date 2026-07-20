@@ -6015,9 +6015,32 @@
                         };
                     });
 
-                    // Si está offline, solo mostramos las locales
+                    // Cargar caché local de metadatos de biblioteca si existe
+                    let cachedServerBooks = [];
+                    if (currentUser && currentUser.telegram) {
+                        try {
+                            const cached = localStorage.getItem('lumin_user_library_books_' + currentUser.telegram);
+                            if (cached) cachedServerBooks = JSON.parse(cached);
+                        } catch(e) {}
+                    }
+
+                    // Si está offline, mostramos las locales + las del servidor guardadas en cache local (marcando si están offline o no)
                     if (!navigator.onLine || !currentUser) {
-                        allBooks = localBooksList;
+                        let mergedBooks = [...localBooksList];
+                        cachedServerBooks.forEach(serverBook => {
+                            if (!localBooksMap[serverBook.id]) {
+                                mergedBooks.push({
+                                    id: serverBook.id,
+                                    fileId: serverBook.id,
+                                    name: serverBook.name,
+                                    size: 0,
+                                    date: new Date().getTime(),
+                                    isOffline: false
+                                });
+                            }
+                        });
+                        
+                        allBooks = mergedBooks;
                         filteredBooks = [...allBooks];
                         currentBookIndex = 0;
                         renderCarousel();
@@ -6035,6 +6058,11 @@
                             let mergedBooks = [...localBooksList];
                             
                             if (response && response.success && response.books) {
+                                // Guardar metadatos en cache local para uso offline futuro
+                                if (currentUser && currentUser.telegram) {
+                                    localStorage.setItem('lumin_user_library_books_' + currentUser.telegram, JSON.stringify(response.books));
+                                }
+                                
                                 response.books.forEach(serverBook => {
                                     // Si no está ya localmente, la agregamos como online-only
                                     if (!localBooksMap[serverBook.id]) {
@@ -6057,7 +6085,22 @@
                         })
                         .withFailureHandler(err => {
                             console.error("[Lumin PWA] Error al obtener biblioteca online:", err);
-                            allBooks = localBooksList;
+                            
+                            let mergedBooks = [...localBooksList];
+                            cachedServerBooks.forEach(serverBook => {
+                                if (!localBooksMap[serverBook.id]) {
+                                    mergedBooks.push({
+                                        id: serverBook.id,
+                                        fileId: serverBook.id,
+                                        name: serverBook.name,
+                                        size: 0,
+                                        date: new Date().getTime(),
+                                        isOffline: false
+                                    });
+                                }
+                            });
+                            
+                            allBooks = mergedBooks;
                             filteredBooks = [...allBooks];
                             currentBookIndex = 0;
                             renderCarousel();
@@ -7544,14 +7587,32 @@
                             fetchBookFromServer(fileId, operationId);
                         });
                     } else {
+                        if (!navigator.onLine) {
+                            alert("Esta novela requiere conexión a internet para abrirse por primera vez y guardarse en el dispositivo.");
+                            isOpeningBook = false;
+                            hideLoader();
+                            return;
+                        }
                         fetchBookFromServer(fileId, operationId);
                     }
                 }).catch(err => {
                     if (abortIfStale()) return;
                     console.error("Error consultando IndexedDB:", err);
+                    if (!navigator.onLine) {
+                        alert("Error de conexión y fallo al leer la base de datos offline.");
+                        isOpeningBook = false;
+                        hideLoader();
+                        return;
+                    }
                     fetchBookFromServer(fileId, operationId);
                 });
             } else {
+                if (!navigator.onLine) {
+                    alert("Esta novela requiere conexión a internet para abrirse por primera vez.");
+                    isOpeningBook = false;
+                    hideLoader();
+                    return;
+                }
                 fetchBookFromServer(fileId, operationId);
             }
 
