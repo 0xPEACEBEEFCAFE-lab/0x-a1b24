@@ -4752,15 +4752,24 @@
                 <span>Sin conexión — Solo libros guardados disponibles</span>
             </div>
 
-            <!-- Hero Section / Bóveda Offline -->
+            <!-- Hero Section / Mi Biblioteca Personal VIP -->
             <div class="library-hero-section" style="text-align: center; margin-top: 40px; width: 100%;">
-                <h2 style="font-family: 'Cinzel', serif; color: var(--lumin-yellow); font-size: 28px; margin-bottom: 15px;">Novelas Guardadas</h2>
+                <h2 id="library-hero-title" style="font-family: 'Cinzel', serif; color: var(--lumin-yellow); font-size: 28px; margin-bottom: 15px;">Mi Biblioteca VIP</h2>
                 <p style="color: var(--muted-foreground); max-width: 500px; margin: 0 auto 30px;">
-                    Estas novelas están guardadas localmente en este dispositivo y están listas para leerse incluso sin conexión a Internet.
+                    Aquí tienes tus novelas VIP personalizadas. Las marcadas como "Guardada" están disponibles para leer sin conexión.
                 </p>
             </div>
 
-            <!-- Book Carousel (reutilizado para la lista local) -->
+            <!-- Modern Search Bar -->
+            <div class="search-bar-wrapper">
+                <i class="fas fa-search search-bar-icon"></i>
+                <input type="text" id="site-search" class="search-bar-input" placeholder="Buscar novelas en tu biblioteca..." oninput="filterBooksDebounced()">
+                <button id="search-clear-btn" class="search-bar-clear" onclick="clearSearch()" title="Limpiar búsqueda">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Book Carousel -->
             <div id="carousel-view" class="carousel-container" style="justify-content: center; width: 100%;">
                 <div class="carousel-book-display" id="carousel-book-display" style="justify-content: center; flex-wrap: wrap; gap: 20px; overflow-x: visible;"></div>
             </div>
