@@ -5853,10 +5853,11 @@
                                 permKey: response.permKey,
                                 email: response.email,
                                 facebookLink: response.facebookLink,
-                                fullData: response.fullData
+                                fullData: response.fullData,
+                                deviceId: response.deviceId || globalDeviceId
                             };
                             
-                            // Guardar sesión activa
+                            // Guardar sesión activa con deviceId para validación futura
                             localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
                             
                             loadLibrary();
@@ -5879,19 +5880,27 @@
                     })
                     .withFailureHandler(err => {
                         hideLoader();
-                        // Fallback: intentar usar sesión guardada
+                        // Fallback: intentar usar sesión guardada SOLO si el dispositivo coincide
                         const savedSession = localStorage.getItem('lumin_user_session');
                         if (savedSession) {
                             try {
-                                currentUser = JSON.parse(savedSession);
-                                console.log("[Lumin PWA] Error de red, fallback a sesión guardada...");
-                                loadLibrary();
-                                if (initBookId) {
-                                    openBook(initBookId, initBookName || "Novela");
+                                const parsed = JSON.parse(savedSession);
+                                // SEGURIDAD: Verificar que la sesión pertenece a ESTE dispositivo
+                                if (parsed.deviceId && parsed.deviceId !== globalDeviceId) {
+                                    console.warn('[Lumin PWA] Sesión de otro dispositivo detectada en fallback, limpiando...');
+                                    localStorage.removeItem('lumin_user_session');
+                                    // No usar esta sesión, caer al flujo de error
                                 } else {
-                                    switchView('library-section');
+                                    currentUser = parsed;
+                                    console.log("[Lumin PWA] Error de red, fallback a sesión guardada...");
+                                    loadLibrary();
+                                    if (initBookId) {
+                                        openBook(initBookId, initBookName || "Novela");
+                                    } else {
+                                        switchView('library-section');
+                                    }
+                                    return;
                                 }
-                                return;
                             } catch(e) {}
                         }
                         if (statusContainer) statusContainer.style.display = 'none';
@@ -5905,13 +5914,25 @@
             if (initBookId && typeof LuminOfflineDB !== 'undefined') {
                 LuminOfflineDB.getBook(initBookId).then(cachedBook => {
                     if (cachedBook) {
-                        console.log("[Lumin PWA] Libro encontrado offline, abriendo directamente...");
+                        console.log("[Lumin PWA] Libro encontrado offline, verificando dispositivo...");
                         const savedSession = localStorage.getItem('lumin_user_session');
                         if (savedSession) {
-                            try { currentUser = JSON.parse(savedSession); } catch(e) {}
+                            try {
+                                const parsed = JSON.parse(savedSession);
+                                // SEGURIDAD: Verificar que la sesión pertenece a ESTE dispositivo
+                                if (parsed.deviceId && parsed.deviceId !== globalDeviceId) {
+                                    console.warn('[Lumin PWA] Sesión offline de otro dispositivo, acceso denegado.');
+                                    localStorage.removeItem('lumin_user_session');
+                                    if (statusContainer) statusContainer.style.display = 'none';
+                                    if (errorEl) errorEl.textContent = 'Acceso Denegado: Este dispositivo no está autorizado. Solicita acceso desde el Bot de Telegram VIP.';
+                                    switchView('login-section');
+                                    return;
+                                }
+                                currentUser = parsed;
+                            } catch(e) {}
                         }
                         if (!currentUser) {
-                            currentUser = { telegram: 'Lector Offline', permissions: {}, sessionToken: 'offline' };
+                            currentUser = { telegram: 'Lector Offline', permissions: {}, sessionToken: 'offline', deviceId: globalDeviceId };
                         }
                         
                         loadLibrary();
@@ -5970,6 +5991,7 @@
                         hideLoader();
                         if (response.isValid) {
                             currentUser = response;
+                            currentUser.deviceId = response.deviceId || globalDeviceId;
                             localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
                             
                             loadLibrary();
@@ -6008,6 +6030,16 @@
                             localStorage.removeItem('lumin_user_session');
                             if (statusContainer) statusContainer.style.display = 'none';
                             if (errorEl) errorEl.textContent = "Tu sesión anterior era incompleta. Por favor, abre el enlace de lectura desde el Bot de Telegram VIP.";
+                            switchView('login-section');
+                            return;
+                        }
+                        
+                        // SEGURIDAD CRÍTICA: Verificar que la sesión guardada pertenece a ESTE dispositivo
+                        if (parsed.deviceId && parsed.deviceId !== globalDeviceId) {
+                            console.warn('[Lumin PWA] Sesión de otro dispositivo detectada (' + parsed.deviceId + ' vs ' + globalDeviceId + '), acceso denegado.');
+                            localStorage.removeItem('lumin_user_session');
+                            if (statusContainer) statusContainer.style.display = 'none';
+                            if (errorEl) errorEl.textContent = 'Acceso Denegado: Esta sesión pertenece a otro dispositivo. Solicita acceso desde el Bot de Telegram VIP.';
                             switchView('login-section');
                             return;
                         }
@@ -6069,8 +6101,9 @@
                     hideLoader();
                     if (response.isValid) {
                         currentUser = response;
+                        currentUser.deviceId = response.deviceId || globalDeviceId;
                         
-                        // Guardar sesión para modo avión
+                        // Guardar sesión para modo avión (incluye deviceId para validación futura)
                         localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
                         
                         document.getElementById('welcome-user').textContent = `Usuario: ${currentUser.telegram}`;
