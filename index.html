@@ -4979,8 +4979,8 @@
                             <div class="offline-cache-list" id="offline-cache-list" style="margin-bottom: 10px; max-height: 150px; overflow-y: auto; padding: 5px; border: 1px solid rgba(253,253,150,0.1); border-radius: 8px;">
                                 <div class="offline-cache-empty">No hay novelas guardadas</div>
                             </div>
-                            <button class="cache-clear-all" id="cache-clear-all-btn" style="display:none; margin-top:8px;" onclick="clearAllOfflineCache()">
-                                <i class="fas fa-trash-alt"></i> Vaciar bóveda offline
+                            <button class="pixel-button secondary" id="cache-clear-all-btn" style="display:none; margin-top:12px; width:100%; background:#ff6b6b; color:white; border-radius:12px; font-weight:600; padding:10px;" onclick="clearAllOfflineCache()">
+                                <i class="fas fa-trash-alt" style="margin-right:8px;"></i> Eliminar todas las novelas offline
                             </button>
                         </div>
                     </div>
@@ -5030,6 +5030,9 @@
             <!-- Versión Desktop -->
             <div class="viewer-header-desktop">
                 <div class="viewer-header-left">
+                    <button onclick="goBackToLibrary()" class="pixel-button secondary" title="Volver a la Biblioteca" aria-label="Volver a la Biblioteca" style="margin-right: 8px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </button>
                     <button onclick="toggleHeader()" class="pixel-button secondary icon-only" title="Ocultar controles" aria-label="Ocultar controles del visor">
                         <i class="fas fa-eye-slash" id="toggle-header-icon"></i>
                     </button>
@@ -5126,6 +5129,9 @@
             <!-- Versión Móvil -->
             <div class="viewer-header-mobile">
                 <div class="viewer-header-mobile-top">
+                    <button onclick="goBackToLibrary()" class="pixel-button secondary icon-only" title="Volver a la Biblioteca" aria-label="Volver a la Biblioteca" style="margin-right: 8px;">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
                     <span class="viewer-mobile-title" id="viewer-title-mobile">Título</span>
                     <button onclick="toggleHeader()" class="pixel-button secondary icon-only" title="Ocultar">
                         <i class="fas fa-eye-slash" id="toggle-header-icon-mobile"></i>
