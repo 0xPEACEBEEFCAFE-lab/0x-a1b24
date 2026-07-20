@@ -5720,9 +5720,9 @@
             // 6. Estadísticas de caché offline
             setTimeout(renderOfflineCacheStats, 1000);
 
-            // NUEVO: Validar Token de enlace (fuera de Telegram)
+            // NUEVO: Validar Token de acceso a la biblioteca personal
             const initUrlParams = new URLSearchParams(window.location.search);
-            const initOfflineToken = initUrlParams.get('token');
+            const initLibToken = initUrlParams.get('libToken');
             const initBookId = initUrlParams.get('bookId');
             const initBookName = initUrlParams.get('bookName');
 
@@ -5736,12 +5736,11 @@
             function executeTokenValidation() {
                 if (statusContainer) statusContainer.style.display = 'block';
                 if (errorEl) errorEl.textContent = '';
-                showLoader("Validando acceso seguro...");
+                showLoader("Validando acceso seguro a tu biblioteca...");
                 
                 google.script.run
                     .withSuccessHandler(response => {
                         hideLoader();
-                        console.log("[Lumin PWA] Versión del servidor:", response.serverVersion || "Antigua");
                         
                         if (response.isValid) {
                             currentUser = {
@@ -5758,9 +5757,6 @@
                             
                             // Guardar sesión activa
                             localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
-                            if (initOfflineToken) {
-                                localStorage.setItem('lumin_session_' + initOfflineToken, JSON.stringify(currentUser));
-                            }
                             
                             loadLibrary();
                             
@@ -5776,7 +5772,7 @@
                             }
                         } else {
                             if (statusContainer) statusContainer.style.display = 'none';
-                            if (errorEl) errorEl.textContent = response.error || "Token inválido o expirado.";
+                            if (errorEl) errorEl.textContent = response.error || "Enlace de acceso inválido o expirado.";
                             switchView('login-section');
                         }
                     })
@@ -5801,7 +5797,7 @@
                         if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
-                    .validateOfflineToken(initOfflineToken, deviceId, navigator.userAgent, '');
+                    .validateLibraryToken(initLibToken, deviceId);
             }
 
             // PRIORIDAD MÁXIMA: Si el libro ya está descargado offline en IndexedDB, abrirlo directamente sin conexión al servidor
@@ -5823,7 +5819,7 @@
                         if(window.history && window.history.replaceState) {
                             window.history.replaceState({}, document.title, window.location.pathname + "?bookId=" + initBookId);
                         }
-                    } else if (initOfflineToken) {
+                    } else if (initLibToken) {
                         executeTokenValidation();
                     } else {
                         // Sin token ni libro offline, intentar restaurar sesión general
@@ -5838,13 +5834,13 @@
                             }
                         } else {
                             if (statusContainer) statusContainer.style.display = 'none';
-                            if (errorEl) errorEl.textContent = "Acceso Denegado: Por favor, abre el enlace de lectura desde el Bot de Telegram VIP.";
+                            if (errorEl) errorEl.textContent = "Acceso Denegado: Por favor, abre el enlace de tu biblioteca desde el Bot de Telegram VIP.";
                             switchView('login-section');
                         }
                     }
                 }).catch(err => {
                     console.warn("Error leyendo IndexedDB, procediendo con validación ordinaria:", err);
-                    if (initOfflineToken) {
+                    if (initLibToken) {
                         executeTokenValidation();
                     } else {
                         switchView('login-section');
@@ -5853,8 +5849,8 @@
                 return;
             }
 
-            if (initOfflineToken) {
-                // Si no hay initBookId pero hay token, validar token
+            if (initLibToken) {
+                // Si viene token, validar token
                 executeTokenValidation();
                 return;
             }
@@ -6002,34 +5998,74 @@
             if (isLoading) return;
             isLoading = true;
 
-            showLoader("Cargando novelas guardadas...");
+            showLoader("Cargando tu biblioteca personal...");
             
             if (typeof LuminOfflineDB !== 'undefined') {
                 LuminOfflineDB.getAllBooksMeta().then(offlineBooks => {
-                    hideLoader();
-                    isLoading = false;
-                    if (offlineBooks && offlineBooks.length > 0) {
-                        console.log("[Lumin PWA] Novelas encontradas en bóveda local:", offlineBooks.length);
-                        allBooks = offlineBooks.map(b => ({
+                    const localBooksMap = {};
+                    const localBooksList = (offlineBooks || []).map(b => {
+                        localBooksMap[b.id] = true;
+                        return {
                             id: b.id,
                             fileId: b.id,
                             name: b.title,
                             size: b.size || 0,
                             date: b.savedAt,
                             isOffline: true
-                        }));
+                        };
+                    });
+
+                    // Si está offline, solo mostramos las locales
+                    if (!navigator.onLine || !currentUser) {
+                        allBooks = localBooksList;
                         filteredBooks = [...allBooks];
                         currentBookIndex = 0;
                         renderCarousel();
-                    } else {
-                        allBooks = []; 
-                        filteredBooks = [];
-                        renderCarousel();
-                        const bookDisplay = document.getElementById('carousel-book-display');
-                        if (bookDisplay) {
-                            bookDisplay.innerHTML = '<p style="text-align:center; color: var(--lumin-gold-dark); font-size: 14px; width: 100%; padding: 40px 0; line-height: 1.6;">No tienes novelas guardadas localmente.<br>Abre una novela desde el Bot de Telegram VIP mientras estés online para guardarla en este dispositivo.</p>';
-                        }
+                        hideLoader();
+                        isLoading = false;
+                        return;
                     }
+
+                    // Si está online, consultar las novelas de la biblioteca personal del usuario en el servidor
+                    google.script.run
+                        .withSuccessHandler(response => {
+                            hideLoader();
+                            isLoading = false;
+                            
+                            let mergedBooks = [...localBooksList];
+                            
+                            if (response && response.success && response.books) {
+                                response.books.forEach(serverBook => {
+                                    // Si no está ya localmente, la agregamos como online-only
+                                    if (!localBooksMap[serverBook.id]) {
+                                        mergedBooks.push({
+                                            id: serverBook.id,
+                                            fileId: serverBook.id,
+                                            name: serverBook.name,
+                                            size: 0,
+                                            date: new Date().getTime(),
+                                            isOffline: false
+                                        });
+                                    }
+                                });
+                            }
+                            
+                            allBooks = mergedBooks;
+                            filteredBooks = [...allBooks];
+                            currentBookIndex = 0;
+                            renderCarousel();
+                        })
+                        .withFailureHandler(err => {
+                            console.error("[Lumin PWA] Error al obtener biblioteca online:", err);
+                            allBooks = localBooksList;
+                            filteredBooks = [...allBooks];
+                            currentBookIndex = 0;
+                            renderCarousel();
+                            hideLoader();
+                            isLoading = false;
+                        })
+                        .getUserLibrary(currentUser.sessionToken);
+                        
                 }).catch(err => {
                     console.error("[Lumin PWA] Error leyendo bóveda:", err);
                     hideLoader(); 
@@ -6086,6 +6122,15 @@
             card.className = 'book-card';
             card.onclick = () => openBook((book.fileId || book.id), book.name);
 
+            // Generar el badge de estado offline/online
+            const statusBadge = book.isOffline 
+                ? `<div style="font-size: 10px; color: var(--lumin-yellow); display: flex; align-items: center; gap: 4px; margin-top: 4px; font-weight: 500;">
+                     <i class="fas fa-check-circle"></i> Disponible offline (Guardada)
+                   </div>`
+                : `<div style="font-size: 10px; color: var(--muted-foreground); display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                     <i class="fas fa-cloud-download-alt"></i> Requiere internet para el primer acceso
+                   </div>`;
+
             card.innerHTML = `
                 <div class="book-card-cover-wrap">
                     <div class="book-card-cover-placeholder" style="background: linear-gradient(135deg, ${colors.from}, ${colors.to});">
@@ -6095,7 +6140,7 @@
                         </div>
                     </div>
                     <div class="book-card-overlay">
-                        <span class="book-card-overlay-btn">Abrir Novela</span>
+                        <span class="book-card-overlay-btn">${book.isOffline ? 'Leer offline' : 'Descargar y Leer'}</span>
                     </div>
                     ${progressPercent > 0 ? `
                         <div class="book-card-progress-bar">
@@ -6106,10 +6151,11 @@
                 <div class="book-card-info">
                     <div class="book-card-title">${title}</div>
                     <div class="book-card-author">${author}</div>
-                    <div class="book-card-progress-text">
+                    <div class="book-card-progress-text" style="margin-bottom: 4px;">
                         <i class="fas fa-book-reader" style="color: var(--lumin-yellow-soft);"></i>
                         <span>${progressPercent > 0 ? `${progressPercent}% completado` : 'Sin empezar'}</span>
                     </div>
+                    ${statusBadge}
                 </div>
             `;
             return card;
