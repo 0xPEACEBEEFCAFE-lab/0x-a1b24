@@ -4587,6 +4587,79 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
 
+        /* === HORIZONTAL PREMIUM CAROUSEL === */
+        .carousel-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            padding: 0 40px;
+        }
+
+        .carousel-container {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 20px;
+            padding: 10px 0;
+        }
+
+        .carousel-book-display {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 28px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 20px 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Ocultar barra de desplazamiento */
+        .carousel-book-display::-webkit-scrollbar {
+            display: none;
+        }
+        .carousel-book-display {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .carousel-nav-btn {
+            position: absolute;
+            z-index: 5;
+            border-radius: 50%;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 20, 20, 0.75);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            border: 1px solid rgba(253, 253, 150, 0.25);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .carousel-nav-btn:hover {
+            background: var(--lumin-yellow);
+            border-color: var(--lumin-yellow);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(253, 253, 150, 0.5);
+        }
+
+        .carousel-nav-btn:hover i {
+            color: #121212 !important;
+        }
+
+        .carousel-nav-btn.prev {
+            left: -5px;
+        }
+
+        .carousel-nav-btn.next {
+            right: -5px;
+        }
+
 </style>
 <base target="_blank">
 </head>
@@ -4769,9 +4842,22 @@
                 </button>
             </div>
 
-            <!-- Book Carousel -->
-            <div id="carousel-view" class="carousel-container" style="justify-content: center; width: 100%;">
-                <div class="carousel-book-display" id="carousel-book-display" style="justify-content: center; flex-wrap: wrap; gap: 20px; overflow-x: visible;"></div>
+            <!-- Book Carousel Container -->
+            <div class="carousel-wrapper" id="carousel-wrapper">
+                <!-- Botón Izquierda -->
+                <button onclick="navigateCarousel(-1)" class="carousel-nav-btn prev" title="Anterior">
+                    <i class="fas fa-chevron-left" style="color: var(--lumin-yellow); font-size: 18px;"></i>
+                </button>
+
+                <!-- Book Carousel -->
+                <div id="carousel-view" class="carousel-container">
+                    <div class="carousel-book-display" id="carousel-book-display"></div>
+                </div>
+
+                <!-- Botón Derecha -->
+                <button onclick="navigateCarousel(1)" class="carousel-nav-btn next" title="Siguiente">
+                    <i class="fas fa-chevron-right" style="color: var(--lumin-yellow); font-size: 18px;"></i>
+                </button>
             </div>
             <div class="carousel-counter" id="carousel-counter" style="display:none;"></div>
 
@@ -6250,20 +6336,20 @@
         }
 
         function renderCarousel() {
-            const carouselContainer = document.getElementById('carousel-view');
+            const carouselWrapper = document.getElementById('carousel-wrapper');
             const bookDisplay = document.getElementById('carousel-book-display');
             const counter = document.getElementById('carousel-counter');
             const grid = document.getElementById('books-grid');
 
             const searchQuery = document.getElementById('site-search').value.trim();
             if (searchQuery.length > 0) {
-                carouselContainer.style.display = 'none';
+                if (carouselWrapper) carouselWrapper.style.display = 'none';
                 counter.style.display = 'none';
                 grid.classList.add('active');
                 return;
             }
 
-            carouselContainer.style.display = 'flex';
+            if (carouselWrapper) carouselWrapper.style.display = 'flex';
             counter.style.display = 'none';
             grid.classList.remove('active');
 
@@ -6329,7 +6415,8 @@
                 filteredBooks = [...allBooks];
                 currentBookIndex = 0;
                 document.getElementById('books-grid').classList.remove('active');
-                document.getElementById('carousel-view').style.display = 'flex';
+                const wrapper = document.getElementById('carousel-wrapper');
+                if (wrapper) wrapper.style.display = 'flex';
                 document.getElementById('carousel-counter').style.display = 'block';
                 renderCarousel();
             } else {
@@ -6337,7 +6424,8 @@
                 filteredBooks = filtered;
                 currentBookIndex = 0;
                 renderLibrary(filtered);
-                document.getElementById('carousel-view').style.display = 'none';
+                const wrapper = document.getElementById('carousel-wrapper');
+                if (wrapper) wrapper.style.display = 'none';
                 document.getElementById('carousel-counter').style.display = 'none';
                 document.getElementById('books-grid').classList.add('active');
             }
@@ -6351,7 +6439,8 @@
             filteredBooks = [...allBooks];
             currentBookIndex = 0;
             document.getElementById('books-grid').classList.remove('active');
-            document.getElementById('carousel-view').style.display = 'flex';
+            const wrapper = document.getElementById('carousel-wrapper');
+            if (wrapper) wrapper.style.display = 'flex';
             document.getElementById('carousel-counter').style.display = 'none';
             renderCarousel();
         }
