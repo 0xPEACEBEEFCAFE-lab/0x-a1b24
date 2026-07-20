@@ -5732,33 +5732,8 @@
             const statusContainer = document.getElementById('login-status-container');
             const errorEl = document.getElementById('login-error');
 
-            if (initOfflineToken) {
-                // PRIORIDAD: Si ya tenemos sesión guardada para ESTE TOKEN en ESTE navegador, usarla
-                // (El token es de un solo uso en el servidor — no se puede re-validar)
-                const tokenSessionKey = 'lumin_session_' + initOfflineToken;
-                const savedTokenSession = localStorage.getItem(tokenSessionKey);
-                if (savedTokenSession) {
-                    try {
-                        currentUser = JSON.parse(savedTokenSession);
-                        console.log("[Lumin PWA] Sesión para este token encontrada. Usando sesión local.");
-                        loadLibrary();
-                        if (initBookId) {
-                            openBook(initBookId, initBookName || "Novela");
-                        } else {
-                            switchView('library-section');
-                        }
-                        if(window.history && window.history.replaceState) {
-                            window.history.replaceState({}, document.title, window.location.pathname + (initBookId ? "?bookId="+initBookId : ""));
-                        }
-                        return;
-                    } catch(e) {
-                        console.error("Error restaurando sesión del token:", e);
-                    }
-                }
-
-                // Leer la llave de acceso guardada en este navegador (si existe)
-                const storedAccessKey = localStorage.getItem('lumin_ak_' + initOfflineToken) || '';
-
+            // Función auxiliar para realizar la validación del token con el servidor
+            function executeTokenValidation() {
                 if (statusContainer) statusContainer.style.display = 'block';
                 if (errorEl) errorEl.textContent = '';
                 showLoader("Validando acceso seguro...");
@@ -5767,14 +5742,8 @@
                     .withSuccessHandler(response => {
                         hideLoader();
                         console.log("[Lumin PWA] Versión del servidor:", response.serverVersion || "Antigua");
-                        console.log("[Lumin PWA] Depuración de Dispositivo:", response.deviceDebug || "No disponible");
                         
                         if (response.isValid) {
-                            // Guardar la llave de acceso en localStorage para futuras aperturas
-                            if (response.accessKey) {
-                                localStorage.setItem('lumin_ak_' + initOfflineToken, response.accessKey);
-                            }
-
                             currentUser = {
                                 telegram: response.telegram,
                                 facebook: response.facebook,
@@ -5786,9 +5755,12 @@
                                 facebookLink: response.facebookLink,
                                 fullData: response.fullData
                             };
-                            // Guardar sesión vinculada a ESTE token específico
-                            localStorage.setItem(tokenSessionKey, JSON.stringify(currentUser));
+                            
+                            // Guardar sesión activa
                             localStorage.setItem('lumin_user_session', JSON.stringify(currentUser));
+                            if (initOfflineToken) {
+                                localStorage.setItem('lumin_session_' + initOfflineToken, JSON.stringify(currentUser));
+                            }
                             
                             loadLibrary();
                             
@@ -5798,7 +5770,7 @@
                                 switchView('library-section');
                             }
                             
-                            // Limpiar URL para no dejar el token visible si recargan (opcional)
+                            // Limpiar URL para no dejar el token visible si recargan
                             if(window.history && window.history.replaceState) {
                                 window.history.replaceState({}, document.title, window.location.pathname + (initBookId ? "?bookId="+initBookId : ""));
                             }
@@ -5810,12 +5782,12 @@
                     })
                     .withFailureHandler(err => {
                         hideLoader();
-                        // Fallback: solo usar sesión de ESTE token si falla la red
-                        const fallbackSession = localStorage.getItem(tokenSessionKey);
-                        if (fallbackSession) {
+                        // Fallback: intentar usar sesión guardada
+                        const savedSession = localStorage.getItem('lumin_user_session');
+                        if (savedSession) {
                             try {
-                                currentUser = JSON.parse(fallbackSession);
-                                console.log("[Lumin PWA] Error de red, fallback a sesión de este token...");
+                                currentUser = JSON.parse(savedSession);
+                                console.log("[Lumin PWA] Error de red, fallback a sesión guardada...");
                                 loadLibrary();
                                 if (initBookId) {
                                     openBook(initBookId, initBookName || "Novela");
@@ -5823,15 +5795,67 @@
                                     switchView('library-section');
                                 }
                                 return;
-                            } catch(e) {
-                                console.error("Error restaurando sesión local de respaldo:", e);
-                            }
+                            } catch(e) {}
                         }
                         if (statusContainer) statusContainer.style.display = 'none';
                         if (errorEl) errorEl.textContent = "Error de conexión: " + err;
                         switchView('login-section');
                     })
-                    .validateOfflineToken(initOfflineToken, deviceId, navigator.userAgent, storedAccessKey);
+                    .validateOfflineToken(initOfflineToken, deviceId, navigator.userAgent, '');
+            }
+
+            // PRIORIDAD MÁXIMA: Si el libro ya está descargado offline en IndexedDB, abrirlo directamente sin conexión al servidor
+            if (initBookId && typeof LuminOfflineDB !== 'undefined') {
+                LuminOfflineDB.getBook(initBookId).then(cachedBook => {
+                    if (cachedBook) {
+                        console.log("[Lumin PWA] Libro encontrado offline, abriendo directamente...");
+                        const savedSession = localStorage.getItem('lumin_user_session');
+                        if (savedSession) {
+                            try { currentUser = JSON.parse(savedSession); } catch(e) {}
+                        }
+                        if (!currentUser) {
+                            currentUser = { telegram: 'Lector Offline', permissions: {}, sessionToken: 'offline' };
+                        }
+                        
+                        loadLibrary();
+                        openBook(initBookId, initBookName || cachedBook.title || "Novela");
+                        
+                        if(window.history && window.history.replaceState) {
+                            window.history.replaceState({}, document.title, window.location.pathname + "?bookId=" + initBookId);
+                        }
+                    } else if (initOfflineToken) {
+                        executeTokenValidation();
+                    } else {
+                        // Sin token ni libro offline, intentar restaurar sesión general
+                        const savedSession = localStorage.getItem('lumin_user_session');
+                        if (savedSession) {
+                            try {
+                                currentUser = JSON.parse(savedSession);
+                                loadLibrary();
+                                openBook(initBookId, initBookName || "Novela");
+                            } catch(e) {
+                                switchView('login-section');
+                            }
+                        } else {
+                            if (statusContainer) statusContainer.style.display = 'none';
+                            if (errorEl) errorEl.textContent = "Acceso Denegado: Por favor, abre el enlace de lectura desde el Bot de Telegram VIP.";
+                            switchView('login-section');
+                        }
+                    }
+                }).catch(err => {
+                    console.warn("Error leyendo IndexedDB, procediendo con validación ordinaria:", err);
+                    if (initOfflineToken) {
+                        executeTokenValidation();
+                    } else {
+                        switchView('login-section');
+                    }
+                });
+                return;
+            }
+
+            if (initOfflineToken) {
+                // Si no hay initBookId pero hay token, validar token
+                executeTokenValidation();
                 return;
             }
 
